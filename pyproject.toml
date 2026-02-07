@@ -1,20 +1,24 @@
 [project]
-name = "tradelab-mylibrary"
+name = "tradelab-lopezdp-utils"
 version = "0.1.0"
-description = "Tradelab Library Template"
+description = "Utilities from 'Advances in Financial Machine Learning' by López de Prado"
 readme = "README.md"
 authors = [
     { name = "Ezequiel M Rivero", email = "ezequielmrivero@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "polars>=1.0.0",
+    "numpy>=2.0.0",
+    "pydantic>=2.0.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.8.15,<0.9.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = "tradelab.mylibrary"
+module-name = "tradelab.lopezdp_utils"
 
 # [[tool.uv.index]] USE FOR INSTALLS FROM GAR
 # # From https://docs.astral.sh/uv/guides/integration/alternative-indexes/#authenticate-with-a-google-access-token
