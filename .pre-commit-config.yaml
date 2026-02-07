@@ -1,0 +1,29 @@
+# .pre-commit-config.yaml
+repos:
+  # Ruff formatting and linting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4  # Use latest version
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # UV lock file sync check
+  - repo: local
+    hooks:
+      - id: uv-lock-check
+        name: Check uv lock file is up to date
+        entry: uv
+        args: [sync, --locked, --all-extras, --dev]
+        language: system
+        pass_filenames: false
+        files: ^(pyproject\.toml|uv\.lock)$
+
+  # Basic file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
