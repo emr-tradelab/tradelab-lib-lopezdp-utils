@@ -62,13 +62,12 @@ Convert all v1 code into production-grade, high-performance library code.
 3. **Claude updates TODO.md:**
    - Adds chapter section with all functionalities listed as `[ ]` (to-do)
    - Marks complementary items from ML for Asset Managers if any
-4. **Claude presents the plan** to user for approval/adjustment
-5. **Claude implements** each functionality one by one:
+4. **Claude implements** each functionality one by one:
    - Query NotebookLM for detailed algorithm/snippet for each function
    - Implement v1 following the rules above
    - Mark as `[x]` in TODO.md when done
-6. **Claude updates README.md** with the new submodule and its functionalities
-7. **Claude updates CLAUDE.md** if any project-level guidance changes
+5. **Claude updates README.md** with the new submodule and its functionalities
+6. **Claude updates CLAUDE.md** if any project-level guidance changes
 
 ### Resuming an Interrupted Session
 
