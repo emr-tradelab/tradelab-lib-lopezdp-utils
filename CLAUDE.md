@@ -2,7 +2,20 @@
 
 ## Project Overview
 
-This library implements utilities and building blocks based on **"Advances in Financial Machine Learning"** by Marcos López de Prado. The primary reference material lives in a NotebookLM notebook:
+This library extracts and productionizes all relevant financial ML utilities from:
+- **"Advances in Financial Machine Learning"** (AFML) by Marcos López de Prado — primary source
+- **"Machine Learning for Asset Managers"** by Marcos López de Prado — complementary source
+
+The goal is a standalone Python library (`tradelab.lopezdp_utils`) containing every useful algorithm,
+data structure, and utility from these books, organized by chapter/topic as submodules.
+
+**Development is split into two phases:**
+1. **Pre-Production (current):** Extract v1 implementations faithful to the book's code, using the same libraries (pandas, numpy, etc.), with clean Python style and docstrings.
+2. **Production:** Optimize for algo trading (pandas → Polars, tests, performance, validation).
+
+See `WORKFLOW.md` for the full methodology and `TODO.md` for progress tracking.
+
+### NotebookLM — Single Source of Truth
 
 - **Notebook**: AFML - López de Prado
 - **URL**: https://notebooklm.google.com/notebook/334b6110-699f-4e34-acfc-05e138b65062
@@ -39,3 +52,10 @@ Task(
 ```
 
 This ensures NotebookLM queries are handled by a cheaper model while the main conversation uses the full model for implementation work.
+
+### 3. Follow the extraction workflow
+
+Before implementing anything, always:
+1. Read `TODO.md` to understand current progress
+2. Follow the session workflow described in `WORKFLOW.md`
+3. Update `TODO.md`, `README.md`, and this file as work progresses
