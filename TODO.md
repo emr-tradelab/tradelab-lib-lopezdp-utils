@@ -12,7 +12,7 @@
 ### Part 1: Data Analysis
 - [x] Extract Chapter 2: Financial Data Structures
 - [x] Extract Chapter 3: Labeling
-- [ ] Extract Chapter 4: Sample Weights
+- [x] Extract Chapter 4: Sample Weights
 - [ ] Extract Chapter 5: Fractionally Differentiated Features
 
 ### Part 2: Modelling
@@ -109,3 +109,31 @@
 - [x] ensemble_bet_sizing — Average predictions across multiple meta-labeling classifiers using de Moivre-Laplace theorem (MLAM Section 5.5)
 
 **Note:** MLAM Sections 5.1-5.3 provide conceptual summaries redundant with AFML. Section 5.4 (Trend-Scanning) and Section 5.5 (Bet Sizing formulas) are complementary and should be extracted.
+
+---
+
+### Chapter 4: Sample Weights
+**Branch:** `feat/chapter4-sample-weights`
+**Submodule:** `tradelab.lopezdp_utils.sample_weights`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] mp_num_co_events — Count concurrent labels at each time point to measure informational redundancy (Snippet 4.1)
+- [x] mp_sample_tw — Compute average uniqueness of each label over its lifespan (Snippet 4.2)
+- [x] get_ind_matrix — Build indicator matrix showing which labels are active at each bar (Snippet 4.3)
+- [x] get_avg_uniqueness — Calculate average uniqueness from indicator matrix (Snippet 4.4)
+- [x] seq_bootstrap — Sequential bootstrap resampling that maintains sample diversity (Snippet 4.5)
+- [x] mp_sample_w — Weight samples by attributed absolute log-returns adjusted for concurrency (Snippet 4.10)
+- [x] get_time_decay — Apply piecewise-linear decay based on cumulative uniqueness (Snippet 4.11)
+
+**Functionalities (implement from formulas/logic in AFML):**
+- [x] get_class_weights — Helper to compute class weights for imbalanced datasets (wrapper around scikit-learn)
+
+**ML for Asset Managers additions (complementary):**
+- [x] estimate_independent_trials — Estimate number of effectively independent backtested strategies using ONC clustering (MLAM Section 8.7.1)
+- [x] min_variance_cluster_weights — Aggregate redundant strategy trials using minimum variance allocation (MLAM Section 8)
+- [x] false_strategy_theorem — Compute expected max Sharpe ratio under multiple testing to deflate results (MLAM Snippet 8.1)
+- [x] familywise_error_rate — Calculate FWER (α_K) under multiple hypothesis testing (MLAM Snippet 8.3)
+- [x] type_ii_error_prob — Calculate probability of missing true strategies (β_K) (MLAM Snippet 8.4)
+
+**Note:** AFML provides individual observation weighting; MLAM is complementary by addressing strategy-level redundancy and multiple testing corrections.

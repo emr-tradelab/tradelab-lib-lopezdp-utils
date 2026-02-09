@@ -38,7 +38,7 @@ Each submodule corresponds to a chapter/topic from the books:
 |--------|---------|-------|--------|
 | `data_structures` | Ch 2 | Financial Data Structures (bars, imbalance bars) | ✅ v1 Complete |
 | `labeling` | Ch 3 | Triple-Barrier Method, Meta-Labeling, Trend-Scanning | ✅ v1 Complete |
-| `sample_weights` | Ch 4 | Sample Weights & Uniqueness | Planned |
+| `sample_weights` | Ch 4 | Sample Weights, Uniqueness, Sequential Bootstrap | ✅ v1 Complete |
 | `fractional_diff` | Ch 5 | Fractionally Differentiated Features | Planned |
 
 ### Part 2: Modelling
@@ -100,5 +100,39 @@ Path-dependent labeling methods that account for volatility and price paths duri
 - `drop_labels()` — Handle class imbalance
 - `bet_size_from_probability()` — Single classifier bet sizing (MLAM 5.5)
 - `bet_size_from_ensemble()` — Multi-classifier bet sizing (MLAM 5.5)
+
+### `sample_weights` — Chapter 4: Sample Weights
+
+Correcting for non-IID violations in financial data where labels overlap in time, causing informational redundancy.
+
+**Core Problem**: Financial labels often depend on the same price returns (concurrent labels), violating the IID assumption required by standard ML algorithms.
+
+**Concurrency and Uniqueness** (AFML 4.1-4.2):
+- `mp_num_co_events()` — Count overlapping labels at each time point
+- `mp_sample_tw()` — Compute average uniqueness scores for each label
+- Labels sharing returns get lower uniqueness weights
+
+**Sequential Bootstrap** (AFML 4.3-4.5):
+- `get_ind_matrix()` — Build indicator matrix of label lifespans
+- `get_avg_uniqueness()` — Calculate uniqueness from indicator matrix
+- `seq_bootstrap()` — Resample with probability proportional to uniqueness
+- Creates training sets closer to IID by avoiding redundant samples
+
+**Return Attribution** (AFML 4.10-4.11):
+- `mp_sample_w()` — Weight by attributed absolute log-returns
+- `get_time_decay()` — Apply piecewise-linear decay based on cumulative uniqueness
+- Emphasizes both magnitude (large moves) and recency (adaptive markets)
+
+**Class Imbalance**:
+- `get_class_weights()` — Correct for underrepresented classes
+
+**Strategy-Level Redundancy** (MLAM Ch 8):
+- `false_strategy_theorem()` — Expected max Sharpe under multiple testing
+- `familywise_error_rate()` — FWER (α_K) with Šidàk's correction
+- `type_ii_error_prob()` — Power analysis for detecting true strategies
+- `min_variance_cluster_weights()` — Aggregate correlated backtests
+- `estimate_independent_trials()` — Placeholder for ONC clustering
+
+**Key Insight**: AFML ensures individual observations are weighted properly; MLAM extends this to strategy selection under multiple testing.
 
 > See `TODO.md` for detailed progress tracking.
