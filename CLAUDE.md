@@ -1,234 +1,61 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code when working with this Tradelab library template.
+# CLAUDE.md — tradelab-lib-lopezdp-utils
 
 ## Project Overview
 
-This is a **template repository** for creating new Tradelab libraries. It provides standardized project structure, CI/CD workflows, release automation, and development tooling.
+This library extracts and productionizes all relevant financial ML utilities from:
+- **"Advances in Financial Machine Learning"** (AFML) by Marcos López de Prado — primary source
+- **"Machine Learning for Asset Managers"** by Marcos López de Prado — complementary source
 
-**When creating a new library from this template:**
-1. Replace all instances of `mylibrary` with your library name
-2. Update `pyproject.toml` with correct package name and dependencies
-3. Update this CLAUDE.md with library-specific guidance
-4. Implement your library code in `src/tradelab/<library-name>/`
-5. Add tests in `tests/`
+The goal is a standalone Python library (`tradelab.lopezdp_utils`) containing every useful algorithm,
+data structure, and utility from these books, organized by chapter/topic as submodules.
 
-## Module Structure
+**Development is split into two phases:**
+1. **Pre-Production (current):** Extract v1 implementations faithful to the book's code, using the same libraries (pandas, numpy, etc.), with clean Python style and docstrings.
+2. **Production:** Optimize for algo trading (pandas → Polars, tests, performance, validation).
 
+See `WORKFLOW.md` for the full methodology and `TODO.md` for progress tracking.
+
+### NotebookLM — Single Source of Truth
+
+- **Notebook**: AFML - López de Prado
+- **URL**: https://notebooklm.google.com/notebook/334b6110-699f-4e34-acfc-05e138b65062
+- **Library ID**: `afml-l-pez-de-prado`
+
+---
+
+## Mandatory Rules
+
+### 1. ALWAYS consult NotebookLM for López de Prado theory
+
+When the user references **any concept, method, or algorithm** from "Advances in Financial Machine Learning" (e.g., triple-barrier method, meta-labeling, fractional differentiation, purged cross-validation, feature importance, HRP, VPIN, entropy, structural breaks, bet sizing, etc.):
+
+- **NEVER** rely on your own training knowledge for the theoretical or algorithmic details.
+- **ALWAYS** delegate the question to NotebookLM first using the `ask_question` tool with notebook URL `https://notebooklm.google.com/notebook/334b6110-699f-4e34-acfc-05e138b65062`.
+- Use the NotebookLM answer as the **ground truth** for implementation.
+- You may use your own knowledge only for general Python/software engineering concerns (syntax, libraries, testing, etc.), never for the financial ML theory itself.
+
+### 2. Use the NotebookLM research agent for queries
+
+To save tokens, **ALWAYS** use the Task tool with `subagent_type: "general-purpose"` and `model: "haiku"` when querying NotebookLM. The agent prompt should:
+
+1. Call `mcp__notebooklm__ask_question` with the question and the notebook URL above.
+2. Return the answer verbatim.
+
+Example usage pattern:
 ```
-tradelab-lib-<name>/
-├── src/tradelab/<library-name>/
-│   ├── __init__.py              # Public API exports
-│   └── ...                      # Your modules here
-├── tests/
-│   ├── conftest.py              # Pytest configuration and fixtures
-│   └── test_*.py                # Test modules
-├── .github/workflows/
-│   ├── quality.yml              # Code quality checks on every push
-│   └── release.yml              # Automated publishing to GAR
-├── pyproject.toml               # Dependencies and build config
-├── config-gar.env               # GCP/GAR configuration
-├── release.sh                   # Interactive release script
-└── CLAUDE.md                    # This file - update with specific guidance
-```
-
-## Development Commands
-
-### Environment Setup
-```bash
-# Install dependencies
-uv sync --all-extras --dev
-
-# Activate virtual environment
-source .venv/bin/activate
-
-# Install pre-commit hooks
-uv run pre-commit install
-```
-
-### Code Quality
-```bash
-# Auto-fix linting issues and format code
-uv run ruff check . --fix
-uv run ruff format .
-
-# Check only (no changes)
-uv run ruff check .
+Task(
+  description="Ask NotebookLM about X",
+  subagent_type="general-purpose",
+  model="haiku",
+  prompt="Use the mcp__notebooklm__ask_question tool to ask the following question to notebook URL https://notebooklm.google.com/notebook/334b6110-699f-4e34-acfc-05e138b65062: '<your question here>'. Return the full answer."
+)
 ```
 
-### Testing
-```bash
-# Run all tests
-uv run pytest -v
+This ensures NotebookLM queries are handled by a cheaper model while the main conversation uses the full model for implementation work.
 
-# Run specific test file
-uv run pytest tests/test_example.py
+### 3. Follow the extraction workflow
 
-# Run tests with timing
-uv run pytest -v --durations=0
-```
-
-## Release Process
-
-This template uses a **dual-environment release workflow** (test/prod):
-
-### Test Release (Development)
-Publishes to test GAR (`tradelab023`) for validation:
-
-```bash
-./release.sh test patch "fix: correct validation"
-# Creates tag: v0.1.1-test
-# Publishes to: tradelab023 GAR
-```
-
-### Production Release
-Publishes to production GAR (`tradelab023-pro`) for downstream use:
-
-```bash
-./release.sh prod minor "feat: add new feature"
-# Creates tag: v0.2.0
-# Publishes to: tradelab023-pro GAR
-```
-
-**What the script does:**
-1. Validates you're on main branch
-2. Runs quality checks (`ruff check`)
-3. Runs full test suite (`pytest`)
-4. Bumps version in `pyproject.toml`
-5. Commits changes and creates annotated git tag
-6. Pushes to origin (triggers GitHub Actions workflow)
-
-**Tag patterns:**
-- `v1.0.0-test` → Test environment (tradelab023)
-- `v1.0.0` → Production environment (tradelab023-pro)
-
-### CI/CD Publishing
-
-After pushing a tag, the GitHub Actions workflow (`.github/workflows/release.yml`):
-1. Runs quality checks and tests
-2. Auto-detects environment from tag suffix
-3. Authenticates to GCP via Workload Identity Federation
-4. Builds package with `uv build`
-5. Publishes to appropriate Google Artifact Registry
-
-**Monitor releases:** `https://github.com/YOUR-ORG/YOUR-REPO/actions`
-
-## Architecture Notes
-
-### Import Guidelines
-
-Libraries should use the `tradelab.<library-name>` namespace:
-
-```python
-# Correct - absolute imports
-from tradelab.mylibrary.module import MyClass
-from tradelab.mylibrary import public_function
-
-# For public API (exported in __init__.py)
-from tradelab.mylibrary import MyClass
-```
-
-### Dependency Management
-
-- **Runtime dependencies:** Add to `project.dependencies` in `pyproject.toml`
-- **Optional dependencies:** Use `project.optional-dependencies` for feature groups
-- **Dev dependencies:** Add to `dependency-groups.dev`
-
-Example optional dependency groups:
-```toml
-[project.optional-dependencies]
-feature1 = ["package1>=1.0.0"]
-feature2 = ["package2>=2.0.0"]
-all = ["package1>=1.0.0", "package2>=2.0.0"]
-```
-
-Install with: `uv sync --extra feature1 --dev`
-
-### Testing Patterns
-
-Use pytest with fixtures in `conftest.py`:
-
-```python
-# conftest.py
-import pytest
-
-@pytest.fixture(scope="session")
-def example_fixture():
-    return {"key": "value"}
-
-# test_example.py
-def test_example(example_fixture):
-    assert example_fixture["key"] == "value"
-```
-
-## Local Development with Google Artifact Registry
-
-### Installing This Library from GAR
-
-```bash
-# Authenticate
-export ARTIFACT_REGISTRY_TOKEN=$(gcloud auth application-default print-access-token)
-export UV_INDEX_TRADELAB_PYPI_USERNAME=oauth2accesstoken
-export UV_INDEX_TRADELAB_PYPI_PASSWORD="$ARTIFACT_REGISTRY_TOKEN"
-
-# Install from GAR (production)
-uv pip install tradelab-<library-name> \
-  --index-url https://europe-southwest1-python.pkg.dev/tradelab023-pro/tradelab-pypi/simple/
-
-# Install from GAR (test)
-uv pip install tradelab-<library-name> \
-  --index-url https://europe-southwest1-python.pkg.dev/tradelab023/tradelab-pypi/simple/
-```
-
-### Editable Installs for Development
-
-In downstream repositories:
-
-```bash
-# From another Tradelab repo (e.g., tradelab-backtester)
-uv pip install -e ../tradelab-lib-<name>
-```
-
-## Code Standards
-
-Follow Tradelab conventions:
-
-- **Python:** ≥3.12 with type hints
-- **Docstrings:** Google style for complex functions
-- **Data operations:** Prefer Polars over pandas
-- **Validation:** Use Pydantic for data validation
-- **Logging:** Use logging module, not print statements
-- **Datetime:** Explicit UTC timezone handling
-- **Line length:** 100 characters (configured in pyproject.toml)
-- **Linting:** Ruff (rules: F, E, W, I, RUF)
-
-## Pre-commit Hooks
-
-The template includes pre-commit hooks that run automatically on `git commit`:
-
-```bash
-# Install hooks
-uv run pre-commit install
-
-# Run manually on all files
-uv run pre-commit run --all-files
-```
-
-**Configured hooks:**
-- Ruff formatting
-- Ruff linting with auto-fix
-- Trailing whitespace removal
-- EOF fixing
-- YAML/TOML validation
-- UV lock sync check
-
-## Notes for Claude Code
-
-When working with this template:
-
-1. **Always update this CLAUDE.md** with library-specific guidance
-2. **Replace placeholder names** (`mylibrary`, `YOUR-ORG`, etc.)
-3. **Add module-specific documentation** in relevant sections
-4. **Document architectural decisions** as the library evolves
-5. **Keep dependency list current** with actual usage patterns
-6. **Update import examples** with actual module names
+Before implementing anything, always:
+1. Read `TODO.md` to understand current progress
+2. Follow the session workflow described in `WORKFLOW.md`
+3. Update `TODO.md`, `README.md`, and this file as work progresses

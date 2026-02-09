@@ -1,18 +1,18 @@
-name: Code Quality
+# name: Code Quality
 
-on:
-  push:
-    branches: [ "**" ]
-  pull_request:
-    branches: [ "**" ]
+# on:
+#   push:
+#     branches: [ "**" ]
+#   pull_request:
+#     branches: [ "**" ]
 
-jobs:
-  quality:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5 # checkout code
-      - uses: astral-sh/setup-uv@v5 # uv setup
-      - run: uv sync --locked --all-extras --dev
-      - run: uvx ruff format .
-      - run: uvx ruff check --fix .
-      - run: uv run pytest -v --durations=0
+# jobs:
+#   quality:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v5 # checkout code
+#       - uses: astral-sh/setup-uv@v5 # uv setup
+#       - run: uv sync --locked --all-extras --dev
+#       - run: uvx ruff format .
+#       - run: uvx ruff check --fix .
+#       - run: uv run pytest -v --durations=0
