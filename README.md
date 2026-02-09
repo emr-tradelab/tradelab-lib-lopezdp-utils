@@ -27,6 +27,8 @@ This reads `TODO.md` and shows you:
 ```python
 from tradelab.lopezdp_utils.data_structures import ...
 from tradelab.lopezdp_utils.labeling import ...
+from tradelab.lopezdp_utils.sample_weights import ...
+from tradelab.lopezdp_utils.fractional_diff import ...
 ```
 
 ## Modules
@@ -39,7 +41,7 @@ Each submodule corresponds to a chapter/topic from the books:
 | `data_structures` | Ch 2 | Financial Data Structures (bars, imbalance bars) | ✅ v1 Complete |
 | `labeling` | Ch 3 | Triple-Barrier Method, Meta-Labeling, Trend-Scanning | ✅ v1 Complete |
 | `sample_weights` | Ch 4 | Sample Weights, Uniqueness, Sequential Bootstrap | ✅ v1 Complete |
-| `fractional_diff` | Ch 5 | Fractionally Differentiated Features | Planned |
+| `fractional_diff` | Ch 5 | Fractionally Differentiated Features | ✅ v1 Complete |
 
 ### Part 2: Modelling
 | Module | Chapter | Topic | Status |
@@ -134,5 +136,23 @@ Correcting for non-IID violations in financial data where labels overlap in time
 - `estimate_independent_trials()` — Placeholder for ONC clustering
 
 **Key Insight**: AFML ensures individual observations are weighted properly; MLAM extends this to strategy selection under multiple testing.
+
+### `fractional_diff` — Chapter 5: Fractionally Differentiated Features
+
+Solving the stationarity vs. memory trade-off: standard differentiation (d=1, i.e., log-returns) achieves stationarity but discards most of the predictive signal. Fractional differentiation with d < 1 preserves memory while achieving stationarity.
+
+**Weight Generation** (AFML 5.1):
+- `get_weights()` — Binomial series expansion weights for (1-B)^d operator
+- `get_weights_ffd()` — Threshold-based weights for FFD method
+- `plot_weights()` — Visualize weight decay across d values
+
+**Fractional Differentiation** (AFML 5.2-5.3):
+- `frac_diff()` — Expanding window method with weight-loss threshold (has negative drift)
+- `frac_diff_ffd()` — Fixed-Width Window method (recommended, driftless)
+
+**Optimal d Selection** (AFML 5.4):
+- `plot_min_ffd()` — Find minimum d* for ADF stationarity while maximizing memory
+
+**Key Insight**: For liquid instruments, d* ≈ 0.35 achieves stationarity with correlation > 0.99 to the original series, far superior to log-returns (d=1, correlation ≈ 0).
 
 > See `TODO.md` for detailed progress tracking.

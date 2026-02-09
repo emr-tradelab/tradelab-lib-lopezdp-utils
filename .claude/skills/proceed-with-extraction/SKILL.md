@@ -2,7 +2,7 @@
 name: proceed-with-extraction
 description: >
   Orchestrates López de Prado extraction workflow for tradelab-lib-lopezdp-utils. Use when
-  starting a work session, when user asks to proceed/continue/resume extraction work, or when
+  starting a work session, when user asks to proceed/continue/resume with extraction work, or when
   user says "let's extract Chapter N". Handles both starting new chapters and resuming
   interrupted sessions. Supports headless/cron execution with full branch lifecycle.
 ---

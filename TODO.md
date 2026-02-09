@@ -13,7 +13,7 @@
 - [x] Extract Chapter 2: Financial Data Structures
 - [x] Extract Chapter 3: Labeling
 - [x] Extract Chapter 4: Sample Weights
-- [ ] Extract Chapter 5: Fractionally Differentiated Features
+- [x] Extract Chapter 5: Fractionally Differentiated Features
 
 ### Part 2: Modelling
 - [ ] Extract Chapter 6: Ensemble Methods
@@ -137,3 +137,23 @@
 - [x] type_ii_error_prob — Calculate probability of missing true strategies (β_K) (MLAM Snippet 8.4)
 
 **Note:** AFML provides individual observation weighting; MLAM is complementary by addressing strategy-level redundancy and multiple testing corrections.
+
+---
+
+### Chapter 5: Fractionally Differentiated Features
+**Branch:** `feat/chapter5-fractional-diff`
+**Submodule:** `tradelab.lopezdp_utils.fractional_diff`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] get_weights — Generate weights (ω) for the fractional difference operator (1−B)^d using binomial series expansion (Snippet 5.1)
+- [x] frac_diff — Standard fractional differentiation using expanding window with weight loss tolerance threshold τ (Snippet 5.2)
+- [x] frac_diff_ffd — Fixed-Width Window Fracdiff (FFD) using constant window width by dropping weights below threshold τ — avoids negative drift (Snippet 5.3)
+- [x] plot_min_ffd — Identify minimum d* required for ADF stationarity while maximizing correlation with original series (Snippet 5.4)
+
+**Functionalities (implement from formulas/logic in AFML):**
+- [x] get_weights_ffd — Generate weights for FFD method, iterating until weight magnitude falls below threshold (helper for frac_diff_ffd)
+- [x] plot_weights — Visualize how weights decay for different values of d (from Snippet 5.1 context)
+
+**ML for Asset Managers additions (complementary):**
+- None — MLAM references fractional differentiation as a prerequisite (already solved in AFML Ch.5) without adding new algorithms. Trend-scanning labels already extracted in Chapter 3.
