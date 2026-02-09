@@ -11,7 +11,7 @@
 
 ### Part 1: Data Analysis
 - [x] Extract Chapter 2: Financial Data Structures
-- [ ] Extract Chapter 3: Labeling
+- [x] Extract Chapter 3: Labeling
 - [ ] Extract Chapter 4: Sample Weights
 - [ ] Extract Chapter 5: Fractionally Differentiated Features
 
@@ -82,3 +82,30 @@
 - [x] discretization_optimal_binning — Optimal binning formulas to quantize continuous price series (MLAM Section 3.9)
 
 **Note:** MLAM references to standard bars, ETF trick are redundant. Denoising/detoning and information-theoretic distance metrics are covered in their respective AFML chapters.
+
+---
+
+### Chapter 3: Labeling
+**Branch:** `feat/chapter3-labeling`
+**Submodule:** `tradelab.lopezdp_utils.labeling`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] daily_volatility — Compute dynamic thresholds for barriers based on daily volatility estimates (Snippet 3.1)
+- [x] get_events — Determine timestamp of first barrier hit (triple-barrier method core utility, with multiprocessing support) (Snippet 3.3)
+- [x] add_vertical_barrier — Define time expiration limit by finding next price bar after specified days (Snippet 3.4)
+- [x] get_bins — Generate final labels (-1, 0, 1) based on return at first barrier touch (Snippet 3.5)
+- [x] get_events_meta — Extended version of get_events for meta-labeling (Snippet 3.6)
+- [x] get_bins_meta — Extended version of get_bins for meta-labeling (Snippet 3.7)
+- [x] drop_labels — Recursively eliminate observations with rare labels to address class imbalance (Snippet 3.8)
+
+**Functionalities (implement from formulas/logic in AFML):**
+- [x] fixed_time_horizon — Standard labeling based on price returns over constant window relative to threshold (mathematical definition only)
+- [x] triple_barrier_labels — High-level wrapper combining daily_volatility, get_events, and get_bins for complete triple-barrier labeling
+
+**ML for Asset Managers additions (complementary):**
+- [x] trend_scanning_labels — Identify most statistically significant trend by maximizing absolute t-value of linear time-trend (MLAM Section 5.4, Snippets 5.1 & 5.2)
+- [x] bet_size_from_meta_labels — Compute bet size based on probability of profit from meta-labels (MLAM Section 5.5)
+- [x] ensemble_bet_sizing — Average predictions across multiple meta-labeling classifiers using de Moivre-Laplace theorem (MLAM Section 5.5)
+
+**Note:** MLAM Sections 5.1-5.3 provide conceptual summaries redundant with AFML. Section 5.4 (Trend-Scanning) and Section 5.5 (Bet Sizing formulas) are complementary and should be extracted.

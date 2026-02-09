@@ -6,6 +6,22 @@ A Python library of financial machine learning utilities extracted from:
 
 Part of the Tradelab algorithmic trading ecosystem.
 
+---
+
+## 🚀 Starting a Work Session
+
+**Always begin with:**
+```
+/resume-extraction
+```
+
+This reads `TODO.md` and shows you:
+- ✅ What's complete
+- ⏭️ Next task to work on
+- 📚 Reminder to query `notebooklm-researcher` agent for theory
+
+---
+
 ## Usage
 
 ```python
@@ -21,7 +37,7 @@ Each submodule corresponds to a chapter/topic from the books:
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
 | `data_structures` | Ch 2 | Financial Data Structures (bars, imbalance bars) | ✅ v1 Complete |
-| `labeling` | Ch 3 | Triple-Barrier Method, Meta-Labeling | Planned |
+| `labeling` | Ch 3 | Triple-Barrier Method, Meta-Labeling, Trend-Scanning | ✅ v1 Complete |
 | `sample_weights` | Ch 4 | Sample Weights & Uniqueness | Planned |
 | `fractional_diff` | Ch 5 | Fractionally Differentiated Features | Planned |
 
@@ -55,5 +71,34 @@ Each submodule corresponds to a chapter/topic from the books:
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
 | `hpc` | Ch 20 | Multiprocessing and Vectorization | Planned |
+
+---
+
+## Module Details
+
+### `labeling` — Chapter 3: Labeling
+
+Path-dependent labeling methods that account for volatility and price paths during holding periods.
+
+**Triple-Barrier Method** (AFML 3.4-3.5):
+- `triple_barrier_labels()` — Complete workflow wrapper
+- `daily_volatility()` — Dynamic thresholds based on volatility
+- `add_vertical_barrier()` — Time-based expiration barriers
+- `get_events()` — Find first barrier touch (profit/stop/time)
+- `get_bins()` — Generate labels from barrier touches
+
+**Meta-Labeling** (AFML 3.6):
+- `get_events_meta()` — Asymmetric barriers for known position sides
+- `get_bins_meta()` — Binary labels for bet sizing (act/pass)
+- Separates side (primary model) from size (meta-model)
+
+**Alternative Methods**:
+- `fixed_time_horizon()` — Standard approach (has known flaws)
+- `trend_scanning_labels()` — Statistical significance-based (MLAM 5.4)
+
+**Utilities**:
+- `drop_labels()` — Handle class imbalance
+- `bet_size_from_probability()` — Single classifier bet sizing (MLAM 5.5)
+- `bet_size_from_ensemble()` — Multi-classifier bet sizing (MLAM 5.5)
 
 > See `TODO.md` for detailed progress tracking.

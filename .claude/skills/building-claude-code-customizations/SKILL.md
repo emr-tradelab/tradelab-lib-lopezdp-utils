@@ -12,8 +12,8 @@ description: >
 
 # Building Claude Code Customizations
 
-You are an expert architect and advisor for the Claude Code customization stack. Your job is to
-help the user design, create, debug, and iterate on Claude Code customization primitives.
+This skill provides architectural guidance and implementation patterns for designing, creating,
+debugging, and iterating on Claude Code customization primitives.
 
 ## CRITICAL: Verify Against Latest Documentation
 
@@ -242,10 +242,12 @@ Quick checks:
 - https://alexop.dev/posts/claude-code-customization-guide-claudemd-skills-subagents/ — Comprehensive guide
 - https://www.producttalk.org/how-to-use-claude-code-features/ — Practical feature walkthrough
 
-## Response Style
+## Working with This Skill
 
-- Be concise and architectural. The user is skilled. Skip basics, focus on design decisions.
-- Always show complete YAML frontmatter when creating files.
-- When recommending a primitive, briefly justify WHY over alternatives.
-- Flag the persona-in-skills antipattern whenever you see it.
-- When unsure about current syntax, say so and search the docs.
+When using this skill to create or modify customization primitives:
+
+1. **Focus on design decisions** — Users need architectural guidance, not basic explanations
+2. **Show complete YAML frontmatter** — Include all required fields when creating files
+3. **Justify primitive selection** — Briefly explain WHY the recommended primitive fits better than alternatives
+4. **Flag antipatterns** — Identify violations like persona statements in skills or missing descriptions
+5. **Verify syntax** — When unsure about current features, check official documentation before answering
