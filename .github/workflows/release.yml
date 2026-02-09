@@ -1,81 +1,81 @@
-name: Release (publish package to GAR)
+# name: Release (publish package to GAR)
 
-# Triggered by tags:
-#   v1.0.0-test  → publishes to test GAR (tradelab023)
-#   v1.0.0       → publishes to prod GAR (tradelab023-pro)
+# # Triggered by tags:
+# #   v1.0.0-test  → publishes to test GAR (tradelab023)
+# #   v1.0.0       → publishes to prod GAR (tradelab023-pro)
 
-on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'        # prod: v1.0.0
-      - 'v[0-9]+.[0-9]+.[0-9]+-test'   # test: v1.0.0-test
-  workflow_dispatch:
+# on:
+#   push:
+#     tags:
+#       - 'v[0-9]+.[0-9]+.[0-9]+'        # prod: v1.0.0
+#       - 'v[0-9]+.[0-9]+.[0-9]+-test'   # test: v1.0.0-test
+#   workflow_dispatch:
 
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: 'read'
-      id-token: 'write'
+# jobs:
+#   publish:
+#     runs-on: ubuntu-latest
+#     permissions:
+#       contents: 'read'
+#       id-token: 'write'
 
-    steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v5
+#     steps:
+#       - uses: actions/checkout@v5
+#       - uses: astral-sh/setup-uv@v5
 
-      - name: Install dependencies and run tests
-        run: |
-          uv sync --all-extras --dev
-          uv run pytest -v --durations=0
+#       - name: Install dependencies and run tests
+#         run: |
+#           uv sync --all-extras --dev
+#           uv run pytest -v --durations=0
 
-      - name: Load config and determine environment
-        run: |
-          set -a
-          source config-gar.env
-          set +a
+#       - name: Load config and determine environment
+#         run: |
+#           set -a
+#           source config-gar.env
+#           set +a
 
-          # Determine environment from tag
-          TAG="${{ github.ref_name }}"
-          if [[ "$TAG" == *"-test" ]]; then
-            echo "DEPLOY_ENV=test" >> $GITHUB_ENV
-            echo "PROJECT_ID=$TEST_PROJECT_ID" >> $GITHUB_ENV
-            echo "PROJECT_NUMBER=$TEST_PROJECT_NUMBER" >> $GITHUB_ENV
-          else
-            echo "DEPLOY_ENV=prod" >> $GITHUB_ENV
-            echo "PROJECT_ID=$PROD_PROJECT_ID" >> $GITHUB_ENV
-            echo "PROJECT_NUMBER=$PROD_PROJECT_NUMBER" >> $GITHUB_ENV
-          fi
+#           # Determine environment from tag
+#           TAG="${{ github.ref_name }}"
+#           if [[ "$TAG" == *"-test" ]]; then
+#             echo "DEPLOY_ENV=test" >> $GITHUB_ENV
+#             echo "PROJECT_ID=$TEST_PROJECT_ID" >> $GITHUB_ENV
+#             echo "PROJECT_NUMBER=$TEST_PROJECT_NUMBER" >> $GITHUB_ENV
+#           else
+#             echo "DEPLOY_ENV=prod" >> $GITHUB_ENV
+#             echo "PROJECT_ID=$PROD_PROJECT_ID" >> $GITHUB_ENV
+#             echo "PROJECT_NUMBER=$PROD_PROJECT_NUMBER" >> $GITHUB_ENV
+#           fi
 
-          # Common variables
-          echo "CI_SA=$CI_SA" >> $GITHUB_ENV
-          echo "REPOSITORY=$REPOSITORY" >> $GITHUB_ENV
-          echo "GAR_LOCATION=$GAR_LOCATION" >> $GITHUB_ENV
+#           # Common variables
+#           echo "CI_SA=$CI_SA" >> $GITHUB_ENV
+#           echo "REPOSITORY=$REPOSITORY" >> $GITHUB_ENV
+#           echo "GAR_LOCATION=$GAR_LOCATION" >> $GITHUB_ENV
 
-      - name: Set GAR publish URL
-        run: |
-          echo "GAR_PUBLISH_URL=https://${GAR_LOCATION}-python.pkg.dev/${PROJECT_ID}/${REPOSITORY}/" >> $GITHUB_ENV
-          echo "Publishing to: $DEPLOY_ENV environment ($PROJECT_ID)"
+#       - name: Set GAR publish URL
+#         run: |
+#           echo "GAR_PUBLISH_URL=https://${GAR_LOCATION}-python.pkg.dev/${PROJECT_ID}/${REPOSITORY}/" >> $GITHUB_ENV
+#           echo "Publishing to: $DEPLOY_ENV environment ($PROJECT_ID)"
 
-      - name: Set WIF variables
-        run: |
-          echo "WIF_PROVIDER=projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> $GITHUB_ENV
-          echo "WIF_SERVICE_ACCOUNT=${CI_SA}@${PROJECT_ID}.iam.gserviceaccount.com" >> $GITHUB_ENV
+#       - name: Set WIF variables
+#         run: |
+#           echo "WIF_PROVIDER=projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> $GITHUB_ENV
+#           echo "WIF_SERVICE_ACCOUNT=${CI_SA}@${PROJECT_ID}.iam.gserviceaccount.com" >> $GITHUB_ENV
 
-      - name: Authenticate to Google Cloud
-        id: auth
-        uses: google-github-actions/auth@v2
-        with:
-          project_id: ${{ env.PROJECT_ID }}
-          workload_identity_provider: ${{ env.WIF_PROVIDER }}
-          service_account: ${{ env.WIF_SERVICE_ACCOUNT }}
-          token_format: access_token
+#       - name: Authenticate to Google Cloud
+#         id: auth
+#         uses: google-github-actions/auth@v2
+#         with:
+#           project_id: ${{ env.PROJECT_ID }}
+#           workload_identity_provider: ${{ env.WIF_PROVIDER }}
+#           service_account: ${{ env.WIF_SERVICE_ACCOUNT }}
+#           token_format: access_token
 
-      - name: Build package
-        run: uv build
+#       - name: Build package
+#         run: uv build
 
-      - name: Publish to GAR
-        env:
-          UV_PUBLISH_USERNAME: oauth2accesstoken
-          UV_PUBLISH_PASSWORD: ${{ steps.auth.outputs.access_token }}
-        run: |
-          echo "Publishing to $DEPLOY_ENV GAR: $GAR_PUBLISH_URL"
-          uv publish --publish-url "$GAR_PUBLISH_URL"
+#       - name: Publish to GAR
+#         env:
+#           UV_PUBLISH_USERNAME: oauth2accesstoken
+#           UV_PUBLISH_PASSWORD: ${{ steps.auth.outputs.access_token }}
+#         run: |
+#           echo "Publishing to $DEPLOY_ENV GAR: $GAR_PUBLISH_URL"
+#           uv publish --publish-url "$GAR_PUBLISH_URL"

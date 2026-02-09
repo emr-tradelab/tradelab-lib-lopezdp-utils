@@ -28,7 +28,7 @@ Each submodule corresponds to a chapter/topic from the books:
 ### Part 1: Data Analysis
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
-| `data_structures` | Ch 2 | Financial Data Structures (bars, imbalance bars) | Planned |
+| `data_structures` | Ch 2 | Financial Data Structures (bars, imbalance bars) | ✅ v1 Complete |
 | `labeling` | Ch 3 | Triple-Barrier Method, Meta-Labeling | Planned |
 | `sample_weights` | Ch 4 | Sample Weights & Uniqueness | Planned |
 | `fractional_diff` | Ch 5 | Fractionally Differentiated Features | Planned |

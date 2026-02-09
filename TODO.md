@@ -10,7 +10,7 @@
 ## Global Tasks
 
 ### Part 1: Data Analysis
-- [ ] Extract Chapter 2: Financial Data Structures
+- [x] Extract Chapter 2: Financial Data Structures
 - [ ] Extract Chapter 3: Labeling
 - [ ] Extract Chapter 4: Sample Weights
 - [ ] Extract Chapter 5: Fractionally Differentiated Features
@@ -51,18 +51,34 @@
 *Sections below are populated at the start of each chapter's work session.*
 *Each functionality gets its own checkbox and is marked done when implemented.*
 
-<!-- Template for each chapter:
+---
 
-### Chapter N: <Topic>
-**Branch:** `feat/chapterN-<topic>`
-**Submodule:** `tradelab.lopezdp_utils.<topic>`
-**Status:** Not Started | In Progress | v1 Complete
+### Chapter 2: Financial Data Structures
+**Branch:** `feat/chapter1-data-structures`
+**Submodule:** `tradelab.lopezdp_utils.data_structures`
+**Status:** ✅ v1 Complete
 
-**Functionalities:**
-- [ ] functionality_1 — Brief description
-- [ ] functionality_2 — Brief description
+**Functionalities (with Python code in book):**
+- [x] pca_weights — Derive allocation weights conforming to specific risk distribution across covariance matrix principal components (Snippet 2.1)
+- [x] single_future_roll — Adjust futures price series for roll gaps by detracting cumulative gaps (Snippets 2.2 & 2.3)
+- [x] cusum_filter — Event-based sampling using CUSUM quality-control method to detect mean value shifts (Snippet 2.4)
 
-**ML for Asset Managers additions:**
-- [ ] (none / list complementary items)
+**Functionalities (implement from formulas/logic):**
+- [x] time_bars — Sample bars at fixed time intervals
+- [x] tick_bars — Sample bars every N transactions
+- [x] volume_bars — Sample bars every N units exchanged
+- [x] dollar_bars — Sample bars every N market value exchanged
+- [x] tick_imbalance_bars — Information-driven bars based on tick imbalances (TIBs)
+- [x] volume_imbalance_bars — Information-driven bars based on volume imbalances (VIBs)
+- [x] dollar_imbalance_bars — Information-driven bars based on dollar imbalances (DIBs)
+- [x] tick_runs_bars — Information-driven bars based on tick runs (TRBs)
+- [x] volume_runs_bars — Information-driven bars based on volume runs (VRBs)
+- [x] dollar_runs_bars — Information-driven bars based on dollar runs (DRBs)
+- [x] etf_trick — Model complex baskets of securities as single non-expiring, total-return cash products
+- [x] sampling_linspace — Downsampling with constant step
+- [x] sampling_uniform — Downsampling with random uniform selection
 
--->
+**ML for Asset Managers additions (complementary):**
+- [x] discretization_optimal_binning — Optimal binning formulas to quantize continuous price series (MLAM Section 3.9)
+
+**Note:** MLAM references to standard bars, ETF trick are redundant. Denoising/detoning and information-theoretic distance metrics are covered in their respective AFML chapters.
