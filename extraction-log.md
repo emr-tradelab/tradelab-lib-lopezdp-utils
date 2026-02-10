@@ -136,3 +136,29 @@ no changes added to commit (use "git add" and/or "git commit -a")
  1 file changed, 37 insertions(+)
 failed to get: -60008
 fatal: could not read Username for 'https://github.com': Device not configured
+
+---
+## Extraction Run: 2026-02-10 19:35:59
+
+Starting López de Prado extraction workflow...
+**Chapter 9 complete.** Extracted 3 utilities into `tradelab.lopezdp_utils.hyperparameter_tuning`:
+
+| Function | Snippet | Purpose |
+|----------|---------|---------|
+| `clf_hyper_fit` | 9.1 & 9.3 | Grid/randomized search with PurgedKFold CV + optional bagging |
+| `MyPipeline` | 9.2 | Pipeline fix for `sample_weight` routing |
+| `log_uniform` | 9.4 | Log-uniform distribution for non-linear parameter search |
+
+MLAM had no new complementary content — multiple-testing corrections were already extracted in Chapter 4. Branch merged to main and cleaned up. Next session: Chapter 10 (Bet Sizing).
+
+### Git Status After Extraction
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
