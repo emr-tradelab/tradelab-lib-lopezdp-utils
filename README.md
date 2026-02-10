@@ -31,6 +31,7 @@ from tradelab.lopezdp_utils.sample_weights import ...
 from tradelab.lopezdp_utils.fractional_diff import ...
 from tradelab.lopezdp_utils.ensemble_methods import ...
 from tradelab.lopezdp_utils.cross_validation import ...
+from tradelab.lopezdp_utils.feature_importance import ...
 ```
 
 ## Modules
@@ -50,7 +51,7 @@ Each submodule corresponds to a chapter/topic from the books:
 |--------|---------|-------|--------|
 | `ensemble_methods` | Ch 6 | Ensemble Methods (Bagging, Random Forest) | ✅ v1 Complete |
 | `cross_validation` | Ch 7 | Purged K-Fold Cross-Validation | ✅ v1 Complete |
-| `feature_importance` | Ch 8 | Feature Importance (MDA, MDI, SFI) | Planned |
+| `feature_importance` | Ch 8 | Feature Importance (MDI, MDA, SFI, Clustered) | ✅ v1 Complete |
 | `hyperparameter_tuning` | Ch 9 | Hyper-Parameter Tuning | Planned |
 
 ### Part 3: Backtesting
@@ -196,5 +197,33 @@ Time-aware cross-validation that prevents information leakage from overlapping f
 - `probability_weighted_accuracy()` — Penalizes high-confidence wrong predictions more than standard accuracy (MLAM)
 
 **Key Insight**: Standard CV leaks information through overlapping labels. Purging removes concurrent training samples; embargoing adds a buffer for serial correlation. Together they prevent the most common source of backtest overfitting.
+
+### `feature_importance` — Chapter 8: Feature Importance
+
+Framework for understanding which variables drive model performance. López de Prado's "first law of backtesting": feature importance is the research tool, not backtesting.
+
+**Core Methods** (AFML 8.2-8.4):
+- `feat_imp_mdi()` — Mean Decrease Impurity: in-sample importance for tree ensembles (normalized, CLT-scaled)
+- `feat_imp_mda()` — Mean Decrease Accuracy: OOS permutation importance with purged CV
+- `feat_imp_sfi()` — Single Feature Importance: evaluates each feature in isolation (immune to substitution)
+
+**Orthogonalization and Validation** (AFML 8.5-8.6):
+- `get_ortho_feats()` — PCA-based decorrelation to alleviate linear multicollinearity
+- `get_e_vec()` — Eigenvector computation with variance threshold
+- `weighted_kendall_tau()` — Consistency check between supervised importance and PCA rankings
+
+**Synthetic Testing Suite** (AFML 8.7-8.10):
+- `get_test_data()` — Generate datasets with Informative, Redundant, and Noise features
+- `feat_importance()` — Unified wrapper for MDI/MDA/SFI with BaggingClassifier
+- `test_func()` — End-to-end pipeline: generate → analyze → plot
+- `plot_feat_importance()` — Horizontal bar chart with error bars
+
+**Clustered Feature Importance** (MLAM 4.1-4.2, 6.4-6.5):
+- `cluster_kmeans_base()` — ONC base clustering (silhouette t-stat optimization)
+- `cluster_kmeans_top()` — Recursive refinement of below-average clusters
+- `feat_imp_mdi_clustered()` — Clustered MDI: sums importance within ONC clusters
+- `feat_imp_mda_clustered()` — Clustered MDA: shuffles entire feature clusters
+
+**Key Insight**: MDI is biased and in-sample; MDA and SFI are OOS but susceptible to substitution effects. Clustered Feature Importance (MLAM) solves this by grouping correlated features via ONC and measuring importance at the cluster level.
 
 > See `TODO.md` for detailed progress tracking.
