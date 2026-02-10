@@ -132,3 +132,7 @@ Changes not staged for commit:
 	modified:   extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main 417892d] chore: automated extraction run 2026-02-10 15:03
+ 1 file changed, 37 insertions(+)
+failed to get: -60008
+fatal: could not read Username for 'https://github.com': Device not configured
