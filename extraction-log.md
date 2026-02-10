@@ -56,3 +56,42 @@ Untracked files:
 	extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main 2921c05] chore: automated extraction run 2026-02-10 08:34
+ 2 files changed, 58 insertions(+), 50 deletions(-)
+ create mode 100644 extraction-log.md
+ delete mode 100644 scripts/lopez-extraction.sh
+To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
+   3cd4f84..2921c05  main -> main
+
+✅ Changes committed and pushed
+
+**Completed at:** 2026-02-10 08:34:29
+
+---
+## Extraction Run: 2026-02-10 11:34:29
+
+Starting López de Prado extraction workflow...
+Chapter 7 (Cross-Validation in Finance) is complete and merged to main. Here's what was extracted:
+
+**AFML Snippets:**
+- `get_train_times` (7.1) — Purging: removes training observations overlapping with test labels
+- `get_embargo_times` (7.2) — Embargoing: defines wait period after test sets for serial correlation
+- `PurgedKFold` (7.3) — scikit-learn KFold extension with purging + embargoing
+- `cv_score` (7.4) — Robust cross_val_score fixing scikit-learn bugs
+
+**MLAM Addition:**
+- `probability_weighted_accuracy` (Section 6.4) — Scoring metric penalizing confident wrong predictions
+
+**Note:** MLAM multiple-testing corrections (getZStat, type1Err, type2Err, clusterKMeansBase) were already extracted in Chapter 4 — no duplication.
+
+### Git Status After Extraction
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
