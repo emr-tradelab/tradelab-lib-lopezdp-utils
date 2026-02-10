@@ -19,7 +19,7 @@
 - [x] Extract Chapter 6: Ensemble Methods
 - [x] Extract Chapter 7: Cross-Validation in Finance
 - [x] Extract Chapter 8: Feature Importance
-- [ ] Extract Chapter 9: Hyper-Parameter Tuning with Cross-Validation
+- [x] Extract Chapter 9: Hyper-Parameter Tuning with Cross-Validation
 
 ### Part 3: Backtesting
 - [ ] Extract Chapter 10: Bet Sizing
@@ -224,3 +224,23 @@
 - [x] feat_imp_mda_clustered — Clustered MDA: shuffles entire feature clusters simultaneously (MLAM Snippet 6.5)
 
 **Note:** PWA scoring was already extracted in Chapter 7 (cross_validation/scoring.py). ONC clustering is also needed by sample_weights/strategy_redundancy.py (currently a placeholder).
+
+---
+
+### Chapter 9: Hyper-Parameter Tuning with Cross-Validation
+**Branch:** `feat/chapter9-hyperparameter-tuning`
+**Submodule:** `tradelab.lopezdp_utils.hyperparameter_tuning`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] clf_hyper_fit — Grid/randomized search for optimal hyperparameters using PurgedKFold CV with optional bagging (Snippets 9.1 & 9.3)
+- [x] MyPipeline — Enhanced sklearn Pipeline that correctly passes sample_weight to final estimator (Snippet 9.2)
+- [x] log_uniform — Log-uniform distribution for efficient non-linear parameter search (Snippet 9.4)
+
+**Functionalities (implement from formulas/logic in AFML):**
+- (None — all Chapter 9 utilities have code snippets)
+
+**ML for Asset Managers additions (complementary):**
+- None — MLAM multiple-testing corrections (false_strategy_theorem, familywise_error_rate, type_ii_error_prob) were already extracted in Chapter 4 under sample_weights/strategy_redundancy.py.
+
+**Note:** Chapter 9 depends on PurgedKFold from Chapter 7 (cross_validation/purging.py). Dependencies are imported, not duplicated.

@@ -32,6 +32,7 @@ from tradelab.lopezdp_utils.fractional_diff import ...
 from tradelab.lopezdp_utils.ensemble_methods import ...
 from tradelab.lopezdp_utils.cross_validation import ...
 from tradelab.lopezdp_utils.feature_importance import ...
+from tradelab.lopezdp_utils.hyperparameter_tuning import ...
 ```
 
 ## Modules
@@ -52,7 +53,7 @@ Each submodule corresponds to a chapter/topic from the books:
 | `ensemble_methods` | Ch 6 | Ensemble Methods (Bagging, Random Forest) | ✅ v1 Complete |
 | `cross_validation` | Ch 7 | Purged K-Fold Cross-Validation | ✅ v1 Complete |
 | `feature_importance` | Ch 8 | Feature Importance (MDI, MDA, SFI, Clustered) | ✅ v1 Complete |
-| `hyperparameter_tuning` | Ch 9 | Hyper-Parameter Tuning | Planned |
+| `hyperparameter_tuning` | Ch 9 | Hyper-Parameter Tuning with Purged CV | ✅ v1 Complete |
 
 ### Part 3: Backtesting
 | Module | Chapter | Topic | Status |
@@ -225,5 +226,21 @@ Framework for understanding which variables drive model performance. López de P
 - `feat_imp_mda_clustered()` — Clustered MDA: shuffles entire feature clusters
 
 **Key Insight**: MDI is biased and in-sample; MDA and SFI are OOS but susceptible to substitution effects. Clustered Feature Importance (MLAM) solves this by grouping correlated features via ONC and measuring importance at the cluster level.
+
+### `hyperparameter_tuning` — Chapter 9: Hyper-Parameter Tuning with Cross-Validation
+
+Financial-aware hyperparameter optimization using purged k-fold CV to prevent leakage during model selection.
+
+**Search** (AFML 9.1, 9.3):
+- `clf_hyper_fit()` — Grid or randomized search with PurgedKFold CV and optional bagging
+- Auto-selects F1 scoring for meta-labeling ({0,1}) and neg-log-loss otherwise
+
+**Pipeline Fix** (AFML 9.2):
+- `MyPipeline` — Pipeline subclass routing `sample_weight` correctly to the final estimator
+
+**Distributions** (AFML 9.4):
+- `log_uniform()` — Log-uniform distribution for parameters spanning orders of magnitude (SVM C, gamma, etc.)
+
+**Key Insight**: Standard `GridSearchCV` with k-fold leaks information through overlapping labels. Using `PurgedKFold` as the inner CV eliminates this bias. Log-uniform distributions make randomized search far more efficient for non-linear parameters.
 
 > See `TODO.md` for detailed progress tracking.
