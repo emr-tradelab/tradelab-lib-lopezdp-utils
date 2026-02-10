@@ -95,3 +95,40 @@ Changes not staged for commit:
 	modified:   extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main 53ee84d] chore: automated extraction run 2026-02-10 11:43
+ 1 file changed, 39 insertions(+)
+To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
+   2921c05..53ee84d  main -> main
+
+✅ Changes committed and pushed
+
+**Completed at:** 2026-02-10 11:49:06
+
+---
+## Extraction Run: 2026-02-10 14:49:06
+
+Starting López de Prado extraction workflow...
+**Chapter 8: Feature Importance** — extraction complete and merged to main.
+
+**What was extracted:**
+
+| File | Functions | Source |
+|------|-----------|--------|
+| `importance.py` | `feat_imp_mdi`, `feat_imp_mda`, `feat_imp_sfi` | AFML Snippets 8.2-8.4 |
+| `orthogonal.py` | `get_ortho_feats`, `get_e_vec`, `weighted_kendall_tau` | AFML Snippets 8.5-8.6 |
+| `synthetic.py` | `get_test_data`, `feat_importance`, `test_func`, `plot_feat_importance` | AFML Snippets 8.7-8.10 |
+| `clustering.py` | `cluster_kmeans_base`, `cluster_kmeans_top`, `feat_imp_mdi_clustered`, `feat_imp_mda_clustered` | MLAM Snippets 4.1-4.2, 6.4-6.5 |
+
+**MLAM note:** PWA scoring was already in Ch.7. The ONC clustering implementation also unblocks the placeholder in `sample_weights/strategy_redundancy.py`.
+
+### Git Status After Extraction
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
