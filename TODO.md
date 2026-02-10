@@ -18,7 +18,7 @@
 ### Part 2: Modelling
 - [x] Extract Chapter 6: Ensemble Methods
 - [x] Extract Chapter 7: Cross-Validation in Finance
-- [ ] Extract Chapter 8: Feature Importance
+- [x] Extract Chapter 8: Feature Importance
 - [ ] Extract Chapter 9: Hyper-Parameter Tuning with Cross-Validation
 
 ### Part 3: Backtesting
@@ -195,3 +195,32 @@
 - [x] probability_weighted_accuracy — Alternative scoring metric that penalizes high-confidence wrong predictions more than standard accuracy (MLAM Section 6.4)
 
 **Note:** MLAM multiple-testing corrections (getZStat, type1Err, type2Err, clusterKMeansBase) were already extracted in Chapter 4 under sample_weights.
+
+---
+
+### Chapter 8: Feature Importance
+**Branch:** `feat/chapter8-feature-importance`
+**Submodule:** `tradelab.lopezdp_utils.feature_importance`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] feat_imp_mdi — Mean Decrease Impurity: in-sample feature importance for tree-based classifiers using weighted impurity decrease (Snippet 8.2)
+- [x] feat_imp_mda — Mean Decrease Accuracy: out-of-sample permutation importance using purged k-fold CV (Snippet 8.3)
+- [x] feat_imp_sfi — Single Feature Importance: OOS importance of each feature in isolation (Snippet 8.4)
+- [x] get_ortho_feats — Orthogonal Features: PCA-based decorrelation to alleviate multicollinearity (Snippet 8.5)
+- [x] weighted_kendall_tau — Consistency check between supervised importance rankings and PCA eigenvalue rankings (Snippet 8.6)
+- [x] get_test_data — Synthetic dataset generator with informative, redundant, and noise features (Snippet 8.7)
+- [x] feat_importance — Wrapper function to call MDI, MDA, or SFI on a dataset using bagged decision trees (Snippet 8.8)
+- [x] test_func — Master execution component to automate testing pipeline (Snippet 8.9)
+- [x] plot_feat_importance — Visualization utility for mean importance bars with std deviations (Snippet 8.10)
+
+**Functionalities (implement from formulas/logic in AFML):**
+- (None — all Chapter 8 utilities have code snippets)
+
+**ML for Asset Managers additions (complementary):**
+- [x] cluster_kmeans_base — Base ONC clustering that finds optimal K by maximizing silhouette score t-statistic (MLAM Snippet 4.1)
+- [x] cluster_kmeans_top — Recursive top-level ONC refinement of below-average clusters (MLAM Snippet 4.2)
+- [x] feat_imp_mdi_clustered — Clustered MDI: sums feature importance within ONC clusters (MLAM Snippet 6.4)
+- [x] feat_imp_mda_clustered — Clustered MDA: shuffles entire feature clusters simultaneously (MLAM Snippet 6.5)
+
+**Note:** PWA scoring was already extracted in Chapter 7 (cross_validation/scoring.py). ONC clustering is also needed by sample_weights/strategy_redundancy.py (currently a placeholder).
