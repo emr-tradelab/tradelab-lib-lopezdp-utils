@@ -16,7 +16,7 @@
 - [x] Extract Chapter 5: Fractionally Differentiated Features
 
 ### Part 2: Modelling
-- [ ] Extract Chapter 6: Ensemble Methods
+- [x] Extract Chapter 6: Ensemble Methods
 - [ ] Extract Chapter 7: Cross-Validation in Finance
 - [ ] Extract Chapter 8: Feature Importance
 - [ ] Extract Chapter 9: Hyper-Parameter Tuning with Cross-Validation
@@ -157,3 +157,20 @@
 
 **ML for Asset Managers additions (complementary):**
 - None — MLAM references fractional differentiation as a prerequisite (already solved in AFML Ch.5) without adding new algorithms. Trend-scanning labels already extracted in Chapter 3.
+
+---
+
+### Chapter 6: Ensemble Methods
+**Branch:** `feat/chapter6-ensemble-methods`
+**Submodule:** `tradelab.lopezdp_utils.ensemble_methods`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] bagging_accuracy — Calculate probability that a bagging ensemble correctly classifies via majority voting (Snippet 6.1)
+- [x] build_random_forest — Three configurations of Random Forests adapted for financial data with average uniqueness sampling (Snippet 6.2)
+
+**Functionalities (implement from formulas/logic in AFML):**
+- [x] bagging_classifier_factory — Factory for creating BaggingClassifier wrappers with financial-data-aware defaults (early stopping, scalability)
+
+**ML for Asset Managers additions (complementary):**
+- None — MLAM applies ensembles to bet sizing (already in Ch.3), feature importance (Ch.8), and portfolio construction (Ch.16). No new standalone ensemble algorithms to extract here.
