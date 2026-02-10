@@ -30,6 +30,7 @@ from tradelab.lopezdp_utils.labeling import ...
 from tradelab.lopezdp_utils.sample_weights import ...
 from tradelab.lopezdp_utils.fractional_diff import ...
 from tradelab.lopezdp_utils.ensemble_methods import ...
+from tradelab.lopezdp_utils.cross_validation import ...
 ```
 
 ## Modules
@@ -48,7 +49,7 @@ Each submodule corresponds to a chapter/topic from the books:
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
 | `ensemble_methods` | Ch 6 | Ensemble Methods (Bagging, Random Forest) | ✅ v1 Complete |
-| `cross_validation` | Ch 7 | Purged K-Fold Cross-Validation | Planned |
+| `cross_validation` | Ch 7 | Purged K-Fold Cross-Validation | ✅ v1 Complete |
 | `feature_importance` | Ch 8 | Feature Importance (MDA, MDI, SFI) | Planned |
 | `hyperparameter_tuning` | Ch 9 | Hyper-Parameter Tuning | Planned |
 
@@ -173,5 +174,27 @@ Ensemble classifiers adapted for non-IID financial data, where overlapping label
 - `bagging_classifier_factory()` — Wrap any base estimator (SVM, etc.) in BaggingClassifier for parallelized training
 
 **Key Insight**: Methods 1 and 2 are recommended for financial data because they set `max_samples` to average uniqueness (from Ch.4), preventing trees from oversampling redundant overlapping observations.
+
+### `cross_validation` — Chapter 7: Cross-Validation in Finance
+
+Time-aware cross-validation that prevents information leakage from overlapping financial labels. Standard k-fold CV assumes IID observations, which is violated when labels span time intervals.
+
+**Purging** (AFML 7.1):
+- `get_train_times()` — Remove training observations overlapping with test set labels
+- Checks three overlap conditions: start-within, end-within, and complete envelope
+
+**Embargoing** (AFML 7.2):
+- `get_embargo_times()` — Define wait period after test sets to guard against serial correlation (ARMA effects)
+
+**PurgedKFold** (AFML 7.3):
+- `PurgedKFold` — scikit-learn KFold extension that enforces purging and embargoing
+- Shuffle is forced to False (shuffling defeats the purpose with serial data)
+- Test sets are always contiguous blocks
+
+**Scoring** (AFML 7.4, MLAM 6.4):
+- `cv_score()` — Robust `cross_val_score` replacement fixing scikit-learn bugs with sample weights and `classes_` attribute
+- `probability_weighted_accuracy()` — Penalizes high-confidence wrong predictions more than standard accuracy (MLAM)
+
+**Key Insight**: Standard CV leaks information through overlapping labels. Purging removes concurrent training samples; embargoing adds a buffer for serial correlation. Together they prevent the most common source of backtest overfitting.
 
 > See `TODO.md` for detailed progress tracking.

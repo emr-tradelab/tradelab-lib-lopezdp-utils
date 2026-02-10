@@ -17,7 +17,7 @@
 
 ### Part 2: Modelling
 - [x] Extract Chapter 6: Ensemble Methods
-- [ ] Extract Chapter 7: Cross-Validation in Finance
+- [x] Extract Chapter 7: Cross-Validation in Finance
 - [ ] Extract Chapter 8: Feature Importance
 - [ ] Extract Chapter 9: Hyper-Parameter Tuning with Cross-Validation
 
@@ -174,3 +174,24 @@
 
 **ML for Asset Managers additions (complementary):**
 - None — MLAM applies ensembles to bet sizing (already in Ch.3), feature importance (Ch.8), and portfolio construction (Ch.16). No new standalone ensemble algorithms to extract here.
+
+---
+
+### Chapter 7: Cross-Validation in Finance
+**Branch:** `feat/chapter7-cross-validation`
+**Submodule:** `tradelab.lopezdp_utils.cross_validation`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] get_train_times — Remove training observations that overlap in time with test observations to prevent information leakage (Snippet 7.1)
+- [x] get_embargo_times — Define embargo period after test sets to eliminate serial-correlation leakage (Snippet 7.2)
+- [x] PurgedKFold — Scikit-learn KFold extension enforcing purging and embargoing for financial labels that span intervals (Snippet 7.3)
+- [x] cv_score — Robust cross_val_score replacement that fixes scikit-learn bugs with sample weights and classes_ attribute (Snippet 7.4)
+
+**Functionalities (implement from formulas/logic in AFML):**
+- (None — all Chapter 7 utilities have code snippets)
+
+**ML for Asset Managers additions (complementary):**
+- [x] probability_weighted_accuracy — Alternative scoring metric that penalizes high-confidence wrong predictions more than standard accuracy (MLAM Section 6.4)
+
+**Note:** MLAM multiple-testing corrections (getZStat, type1Err, type2Err, clusterKMeansBase) were already extracted in Chapter 4 under sample_weights.
