@@ -162,3 +162,40 @@ Changes not staged for commit:
 	modified:   extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main 8646387] chore: automated extraction run 2026-02-10 19:43
+ 1 file changed, 26 insertions(+)
+To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
+   7c8cacd..8646387  main -> main
+
+✅ Changes committed and pushed
+
+**Completed at:** 2026-02-10 20:58:25
+
+---
+## Extraction Run: 2026-02-10 23:58:25
+
+Starting López de Prado extraction workflow...
+Chapter 10 (Bet Sizing) is complete and merged to main. Here's what was extracted:
+
+**`tradelab.lopezdp_utils.bet_sizing`** — 8 functions across 2 files:
+
+| File | Functions | Source |
+|------|-----------|--------|
+| `signals.py` | `get_signal`, `avg_active_signals`, `discrete_signal` | Snippets 10.1-10.3 |
+| `dynamic_sizing.py` | `bet_size`, `get_target_pos`, `inv_price`, `limit_price`, `get_w` | Snippet 10.4 |
+
+**Notes:**
+- `avg_active_signals` uses a single-threaded v1 (multiprocessing from Ch. 20 not yet extracted)
+- MLAM bet sizing was already in `labeling/bet_sizing.py` from Chapter 3 — no duplication
+
+### Git Status After Extraction
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
