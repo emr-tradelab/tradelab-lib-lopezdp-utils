@@ -22,7 +22,7 @@
 - [x] Extract Chapter 9: Hyper-Parameter Tuning with Cross-Validation
 
 ### Part 3: Backtesting
-- [ ] Extract Chapter 10: Bet Sizing
+- [x] Extract Chapter 10: Bet Sizing
 - [ ] Extract Chapter 11: The Dangers of Backtesting
 - [ ] Extract Chapter 12: Backtesting through Cross-Validation
 - [ ] Extract Chapter 13: Backtesting on Synthetic Data
@@ -244,3 +244,25 @@
 - None — MLAM multiple-testing corrections (false_strategy_theorem, familywise_error_rate, type_ii_error_prob) were already extracted in Chapter 4 under sample_weights/strategy_redundancy.py.
 
 **Note:** Chapter 9 depends on PurgedKFold from Chapter 7 (cross_validation/purging.py). Dependencies are imported, not duplicated.
+
+---
+
+### Chapter 10: Bet Sizing
+**Branch:** `feat/chapter10-bet-sizing`
+**Submodule:** `tradelab.lopezdp_utils.bet_sizing`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] get_signal — Translate predicted probabilities into bet sizes using z-statistic and Normal CDF, with meta-labeling support (Snippet 10.1)
+- [x] avg_active_signals — Compute average signal among concurrently active bets (Snippet 10.2, single-threaded v1)
+- [x] discrete_signal — Round bet sizes to nearest increment of step_size to prevent jitter and overtrading (Snippet 10.3)
+- [x] bet_size — Width-regulated sigmoid function for sizing based on price divergence (Snippet 10.4)
+- [x] get_target_pos — Calculate target position based on forecast vs. market price divergence (Snippet 10.4)
+- [x] inv_price — Inverse sizing function to find price for given bet size (Snippet 10.4)
+- [x] limit_price — Calculate average limit price for multi-unit orders (Snippet 10.4)
+- [x] get_w — Calibrate sigmoid width coefficient for desired divergence-to-size mapping (Snippet 10.4)
+
+**ML for Asset Managers additions (complementary):**
+- None — MLAM bet sizing (bet_size_from_probability, bet_size_from_ensemble) was already extracted in Chapter 3 (labeling/bet_sizing.py).
+
+**Note:** Chapter 10 depends on multiprocessing utilities (mpPandasObj from Ch. 20, not yet extracted). avg_active_signals will use a simplified single-threaded implementation for v1.
