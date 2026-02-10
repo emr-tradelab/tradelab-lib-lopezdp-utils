@@ -29,6 +29,7 @@ from tradelab.lopezdp_utils.data_structures import ...
 from tradelab.lopezdp_utils.labeling import ...
 from tradelab.lopezdp_utils.sample_weights import ...
 from tradelab.lopezdp_utils.fractional_diff import ...
+from tradelab.lopezdp_utils.ensemble_methods import ...
 ```
 
 ## Modules
@@ -46,7 +47,7 @@ Each submodule corresponds to a chapter/topic from the books:
 ### Part 2: Modelling
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
-| `ensemble_methods` | Ch 6 | Ensemble Methods | Planned |
+| `ensemble_methods` | Ch 6 | Ensemble Methods (Bagging, Random Forest) | ✅ v1 Complete |
 | `cross_validation` | Ch 7 | Purged K-Fold Cross-Validation | Planned |
 | `feature_importance` | Ch 8 | Feature Importance (MDA, MDI, SFI) | Planned |
 | `hyperparameter_tuning` | Ch 9 | Hyper-Parameter Tuning | Planned |
@@ -154,5 +155,23 @@ Solving the stationarity vs. memory trade-off: standard differentiation (d=1, i.
 - `plot_min_ffd()` — Find minimum d* for ADF stationarity while maximizing memory
 
 **Key Insight**: For liquid instruments, d* ≈ 0.35 achieves stationarity with correlation > 0.99 to the original series, far superior to log-returns (d=1, correlation ≈ 0).
+
+### `ensemble_methods` — Chapter 6: Ensemble Methods
+
+Ensemble classifiers adapted for non-IID financial data, where overlapping labels and low signal-to-noise ratios make standard implementations suboptimal.
+
+**Bagging Theory** (AFML 6.1):
+- `bagging_accuracy()` — Theoretical accuracy of majority-voting ensemble given N learners, accuracy p, and k classes
+
+**Random Forest Configurations** (AFML 6.2):
+- `build_random_forest()` — Three RF setups for financial data:
+  - Method 0: Standard RF with balanced subsamples
+  - Method 1: BaggingClassifier + DecisionTree with `max_samples=avgU`
+  - Method 2: BaggingClassifier + single-tree RF with `max_samples=avgU`
+
+**Scalability** (AFML 6.6):
+- `bagging_classifier_factory()` — Wrap any base estimator (SVM, etc.) in BaggingClassifier for parallelized training
+
+**Key Insight**: Methods 1 and 2 are recommended for financial data because they set `max_samples` to average uniqueness (from Ch.4), preventing trees from oversampling redundant overlapping observations.
 
 > See `TODO.md` for detailed progress tracking.
