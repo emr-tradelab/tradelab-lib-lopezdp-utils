@@ -33,6 +33,7 @@ from tradelab.lopezdp_utils.ensemble_methods import ...
 from tradelab.lopezdp_utils.cross_validation import ...
 from tradelab.lopezdp_utils.feature_importance import ...
 from tradelab.lopezdp_utils.hyperparameter_tuning import ...
+from tradelab.lopezdp_utils.bet_sizing import ...
 ```
 
 ## Modules
@@ -58,7 +59,7 @@ Each submodule corresponds to a chapter/topic from the books:
 ### Part 3: Backtesting
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
-| `bet_sizing` | Ch 10 | Bet Sizing | Planned |
+| `bet_sizing` | Ch 10 | Bet Sizing (Signal Generation, Dynamic Position Sizing) | ✅ v1 Complete |
 | `backtest_dangers` | Ch 11 | Backtesting Pitfalls | Planned |
 | `backtest_cv` | Ch 12 | Backtesting through Cross-Validation | Planned |
 | `backtest_synthetic` | Ch 13 | Backtesting on Synthetic Data | Planned |
@@ -242,5 +243,25 @@ Financial-aware hyperparameter optimization using purged k-fold CV to prevent le
 - `log_uniform()` — Log-uniform distribution for parameters spanning orders of magnitude (SVM C, gamma, etc.)
 
 **Key Insight**: Standard `GridSearchCV` with k-fold leaks information through overlapping labels. Using `PurgedKFold` as the inner CV eliminates this bias. Log-uniform distributions make randomized search far more efficient for non-linear parameters.
+
+### `bet_sizing` — Chapter 10: Bet Sizing
+
+Translates ML predictions into actionable position sizes using two complementary approaches.
+
+**Signal-Based Sizing** (AFML 10.1-10.3):
+- `get_signal()` — Convert classifier probabilities to bet sizes via z-statistic → Normal CDF
+- `avg_active_signals()` — Average signals among concurrently active bets to prevent concentration
+- `discrete_signal()` — Round to step increments to prevent jitter/overtrading
+
+**Dynamic Position Sizing** (AFML 10.4):
+- `bet_size()` — Width-regulated sigmoid: m(x) = x / sqrt(w + x²)
+- `get_target_pos()` — Target position from forecast-market divergence
+- `inv_price()` — Inverse sizing to find breakeven price for given size
+- `limit_price()` — Average limit price for multi-unit orders
+- `get_w()` — Calibrate sigmoid width for desired divergence-to-size mapping
+
+**Key Insight**: Signal-based sizing maps statistical confidence to bet size (strategy-independent). Dynamic sizing adjusts position as market converges to forecast, with limit prices ensuring breakeven or better execution.
+
+**Note**: MLAM bet sizing (single classifier and ensemble methods) is in `labeling.bet_sizing`.
 
 > See `TODO.md` for detailed progress tracking.
