@@ -23,7 +23,7 @@
 
 ### Part 3: Backtesting
 - [x] Extract Chapter 10: Bet Sizing
-- [ ] Extract Chapter 11: The Dangers of Backtesting
+- [x] Extract Chapter 11: The Dangers of Backtesting
 - [ ] Extract Chapter 12: Backtesting through Cross-Validation
 - [ ] Extract Chapter 13: Backtesting on Synthetic Data
 - [ ] Extract Chapter 14: Backtest Statistics
@@ -266,3 +266,21 @@
 - None — MLAM bet sizing (bet_size_from_probability, bet_size_from_ensemble) was already extracted in Chapter 3 (labeling/bet_sizing.py).
 
 **Note:** Chapter 10 depends on multiprocessing utilities (mpPandasObj from Ch. 20, not yet extracted). avg_active_signals will use a simplified single-threaded implementation for v1.
+
+---
+
+### Chapter 11: The Dangers of Backtesting
+**Branch:** `feat/chapter11-backtesting-dangers`
+**Submodule:** `tradelab.lopezdp_utils.backtesting_dangers`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- None — Chapter 11 contains only heuristic "laws" (Snippets 8.1 and 11.1), not executable code.
+
+**Functionalities (implement from formulas/logic in AFML):**
+- [x] probability_of_backtest_overfitting — Estimate PBO using Combinatorially Symmetric Cross-Validation (CSCV): partition trials into S groups, evaluate all combinatorial train/test splits, compute rank logits, and measure fraction with negative logits (Section 11.5)
+
+**ML for Asset Managers additions (complementary):**
+- None — MLAM Section 8 snippets (false_strategy_theorem, familywise_error_rate, type_ii_error_prob) were already extracted in Chapter 4 (sample_weights/strategy_redundancy.py).
+
+**Note:** Chapter 11 is primarily conceptual ("Seven Sins of Quantitative Investing", Marcos' Laws of Backtesting). The CSCV algorithm is the only extractable utility — described theoretically as a seven-step procedure without code. Implementation follows Bailey et al. (2017).
