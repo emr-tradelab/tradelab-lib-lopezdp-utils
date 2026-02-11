@@ -26,7 +26,7 @@
 - [x] Extract Chapter 11: The Dangers of Backtesting
 - [x] Extract Chapter 12: Backtesting through Cross-Validation
 - [x] Extract Chapter 13: Backtesting on Synthetic Data
-- [ ] Extract Chapter 14: Backtest Statistics
+- [x] Extract Chapter 14: Backtest Statistics
 - [ ] Extract Chapter 15: Understanding Strategy Risk
 - [ ] Extract Chapter 16: Machine Learning Asset Allocation
 
@@ -323,3 +323,28 @@
 
 **ML for Asset Managers additions (complementary):**
 - None — MLAM Snippets 8.1/8.2 (false_strategy_theorem, getDistMaxSR) were already extracted in Chapter 4 (sample_weights/strategy_redundancy.py). MLAM Appendix A provides conceptual taxonomy of non-parametric synthetic data methods (VAE, GAN, etc.) without code — not extractable.
+
+---
+
+### Chapter 14: Backtest Statistics
+**Branch:** `feat/chapter14-backtest-statistics`
+**Submodule:** `tradelab.lopezdp_utils.backtest_statistics`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] get_bet_timing — Derive timestamps of independent bets from position flattening/flipping (Snippet 14.1)
+- [x] get_holding_period — Estimate average holding period using weighted average entry time algorithm (Snippet 14.2)
+- [x] get_hhi — Compute Herfindahl-Hirschman Index for return concentration (positive, negative, temporal) (Snippet 14.3)
+- [x] compute_dd_tuw — Compute drawdown series and time-under-water between high-watermarks (Snippet 14.4)
+
+**Functionalities (implement from formulas/logic in AFML):**
+- [x] sharpe_ratio — Compute annualized Sharpe ratio from excess returns
+- [x] probabilistic_sharpe_ratio — PSR adjusting for non-normality (skewness/kurtosis) and track record length (Section 14.6)
+- [x] deflated_sharpe_ratio — DSR correcting for selection bias under multiple testing (Section 14.7)
+
+**ML for Asset Managers additions (complementary):**
+- [x] strategy_precision — Compute precision of discovery process based on universe odds ratio θ (MLAM Section 8)
+- [x] strategy_recall — Compute recall (1−β) of discovery process (MLAM Section 8)
+- [x] multi_test_precision_recall — Extend precision/recall to K independent trials with Šidàk correction (MLAM Section 8)
+
+**Note:** MLAM Snippets 8.1-8.3 (getExpectedMaxSR, getZStat, type1Err, type2Err) were already extracted in Chapter 4 (sample_weights/strategy_redundancy.py). The odds-ratio-based precision/recall framework is complementary and new.
