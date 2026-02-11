@@ -25,7 +25,7 @@
 - [x] Extract Chapter 10: Bet Sizing
 - [x] Extract Chapter 11: The Dangers of Backtesting
 - [x] Extract Chapter 12: Backtesting through Cross-Validation
-- [ ] Extract Chapter 13: Backtesting on Synthetic Data
+- [x] Extract Chapter 13: Backtesting on Synthetic Data
 - [ ] Extract Chapter 14: Backtest Statistics
 - [ ] Extract Chapter 15: Understanding Strategy Risk
 - [ ] Extract Chapter 16: Machine Learning Asset Allocation
@@ -305,3 +305,21 @@
 - None — MLAM references CPCV as a defense against overfitting but adds no new algorithms beyond what's already extracted (false_strategy_theorem etc. in Ch.4).
 
 **Note:** Chapter 12 is the theoretical framework chapter. No code snippets exist — implementation follows the 5-step algorithm described in Section 12.3. Depends on PurgedKFold from Chapter 7.
+
+---
+
+### Chapter 13: Backtesting on Synthetic Data
+**Branch:** `feat/chapter13-synthetic-backtesting`
+**Submodule:** `tradelab.lopezdp_utils.backtest_synthetic`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] otr_batch — Monte Carlo simulation engine: generates synthetic O-U price paths and evaluates Sharpe ratios across a mesh of profit-taking and stop-loss thresholds (Snippet 13.2)
+- [x] otr_main — Entry point for OTR experiment: generates Cartesian product of market regime parameters and dispatches to batch simulator (Snippet 13.1)
+
+**Functionalities (implement from formulas/logic in AFML):**
+- [x] ou_half_life — Compute half-life of convergence from O-U speed parameter: τ = -log(2)/log(ϕ) (Section 13.5.1)
+- [x] ou_fit — Estimate O-U process parameters (ϕ, σ) from price series via OLS regression on linearized specification (Section 13.5.1)
+
+**ML for Asset Managers additions (complementary):**
+- None — MLAM Snippets 8.1/8.2 (false_strategy_theorem, getDistMaxSR) were already extracted in Chapter 4 (sample_weights/strategy_redundancy.py). MLAM Appendix A provides conceptual taxonomy of non-parametric synthetic data methods (VAE, GAN, etc.) without code — not extractable.
