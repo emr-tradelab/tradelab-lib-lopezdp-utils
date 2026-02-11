@@ -37,6 +37,7 @@ from tradelab.lopezdp_utils.bet_sizing import ...
 from tradelab.lopezdp_utils.backtesting_dangers import ...
 from tradelab.lopezdp_utils.backtest_cv import ...
 from tradelab.lopezdp_utils.backtest_synthetic import ...
+from tradelab.lopezdp_utils.backtest_statistics import ...
 ```
 
 ## Modules
@@ -66,7 +67,7 @@ Each submodule corresponds to a chapter/topic from the books:
 | `backtesting_dangers` | Ch 11 | Backtesting Pitfalls (CSCV, PBO) | ✅ v1 Complete |
 | `backtest_cv` | Ch 12 | Combinatorial Purged Cross-Validation (CPCV) | ✅ v1 Complete |
 | `backtest_synthetic` | Ch 13 | Backtesting on Synthetic Data (OTR, O-U Process) | ✅ v1 Complete |
-| `backtest_statistics` | Ch 14 | Backtest Statistics | Planned |
+| `backtest_statistics` | Ch 14 | Backtest Statistics (SR, PSR, DSR, HHI, DD) | ✅ v1 Complete |
 | `strategy_risk` | Ch 15 | Understanding Strategy Risk | Planned |
 | `ml_asset_allocation` | Ch 16 | Machine Learning Asset Allocation | Planned |
 
@@ -306,5 +307,29 @@ Calibrating optimal trading rules (profit-taking and stop-loss thresholds) using
 - `otr_main()` — Run OTR experiment across multiple market regimes (forecast levels x half-lives)
 
 **Key Insight**: Instead of backtesting on historical data (single path, overfitting risk), generate thousands of synthetic paths under estimated O-U parameters. The optimal trading rule is the (profit-taking, stop-loss) pair maximizing Sharpe ratio across regimes. This reveals whether a strategy's edge is structural or spurious.
+
+### `backtest_statistics` — Chapter 14: Backtest Statistics
+
+Comprehensive backtest evaluation metrics covering bet characterization, risk measurement, and risk-adjusted performance testing.
+
+**Bet Characterization** (AFML 14.1-14.2):
+- `get_bet_timing()` — Identify independent bets from position flattening/flipping (not raw trades)
+- `get_holding_period()` — Average holding period via weighted average entry time algorithm
+
+**Risk Metrics** (AFML 14.3-14.4):
+- `get_hhi()` — Herfindahl-Hirschman Index for return concentration (positive, negative, temporal)
+- `compute_dd_tuw()` — Drawdown series and time-under-water between high-watermarks
+
+**Risk-Adjusted Performance** (AFML 14.5-14.7):
+- `sharpe_ratio()` — Annualized Sharpe ratio from excess returns
+- `probabilistic_sharpe_ratio()` — PSR adjusting for skewness, kurtosis, and track record length
+- `deflated_sharpe_ratio()` — DSR correcting for selection bias under multiple testing
+
+**Strategy Discovery Metrics** (MLAM Section 8):
+- `strategy_precision()` — Precision based on universe odds ratio theta
+- `strategy_recall()` — Recall (statistical power) of discovery process
+- `multi_test_precision_recall()` — Precision/recall under K trials with Sidak correction
+
+**Key Insight**: Standard Sharpe ratio overstates performance when returns are non-Normal or when multiple strategies are tested. PSR adjusts for skewness/kurtosis; DSR further deflates for the number of trials. Strategy precision reveals that even low p-values can yield high false discovery rates when the ratio of true to false strategies (theta) is small.
 
 > See `TODO.md` for detailed progress tracking.
