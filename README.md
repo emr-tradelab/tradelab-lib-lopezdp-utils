@@ -34,6 +34,7 @@ from tradelab.lopezdp_utils.cross_validation import ...
 from tradelab.lopezdp_utils.feature_importance import ...
 from tradelab.lopezdp_utils.hyperparameter_tuning import ...
 from tradelab.lopezdp_utils.bet_sizing import ...
+from tradelab.lopezdp_utils.backtesting_dangers import ...
 ```
 
 ## Modules
@@ -60,7 +61,7 @@ Each submodule corresponds to a chapter/topic from the books:
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
 | `bet_sizing` | Ch 10 | Bet Sizing (Signal Generation, Dynamic Position Sizing) | ✅ v1 Complete |
-| `backtest_dangers` | Ch 11 | Backtesting Pitfalls | Planned |
+| `backtesting_dangers` | Ch 11 | Backtesting Pitfalls (CSCV, PBO) | ✅ v1 Complete |
 | `backtest_cv` | Ch 12 | Backtesting through Cross-Validation | Planned |
 | `backtest_synthetic` | Ch 13 | Backtesting on Synthetic Data | Planned |
 | `backtest_statistics` | Ch 14 | Backtest Statistics | Planned |
@@ -263,5 +264,14 @@ Translates ML predictions into actionable position sizes using two complementary
 **Key Insight**: Signal-based sizing maps statistical confidence to bet size (strategy-independent). Dynamic sizing adjusts position as market converges to forecast, with limit prices ensuring breakeven or better execution.
 
 **Note**: MLAM bet sizing (single classifier and ensemble methods) is in `labeling.bet_sizing`.
+
+### `backtesting_dangers` — Chapter 11: The Dangers of Backtesting
+
+Tools for detecting backtest overfitting. Chapter 11 is primarily conceptual, introducing the "Seven Sins of Quantitative Investing" and heuristic laws. The main extractable algorithm is CSCV.
+
+**Combinatorially Symmetric Cross-Validation** (AFML 11.5):
+- `probability_of_backtest_overfitting()` — Estimate PBO by evaluating all combinatorial train/test splits of strategy trials, computing rank logits, and measuring the fraction with negative logits (below-median OOS performance)
+
+**Key Insight**: If the best in-sample strategy consistently performs below median out-of-sample across combinatorial splits, the backtest is overfit. PBO > 0.5 indicates likely overfitting. For multiple testing corrections (Deflated Sharpe, FWER), see `sample_weights.strategy_redundancy`.
 
 > See `TODO.md` for detailed progress tracking.
