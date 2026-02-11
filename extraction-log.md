@@ -276,3 +276,37 @@ Changes not staged for commit:
 	modified:   extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main 6633822] chore: automated extraction run 2026-02-11 06:29
+ 1 file changed, 37 insertions(+)
+To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
+   32ae677..6633822  main -> main
+
+✅ Changes committed and pushed
+
+**Completed at:** 2026-02-11 06:29:02
+
+---
+## Extraction Run: 2026-02-11 11:45:40
+
+Starting López de Prado extraction workflow...
+Chapter 13 complete. Here's what was extracted:
+
+**`backtest_synthetic`** — 4 functions across 2 files:
+- `ou_half_life()` — Half-life of O-U mean reversion
+- `ou_fit()` — Estimate O-U parameters (phi, sigma) from price series via OLS
+- `otr_batch()` — Monte Carlo engine: simulate O-U paths, compute Sharpe ratios across (PT, SL) mesh (Snippet 13.2)
+- `otr_main()` — Run OTR across market regimes (Snippet 13.1)
+
+No MLAM additions — Snippets 8.1/8.2 were already in Ch.4's `strategy_redundancy.py`.
+
+### Git Status After Extraction
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
