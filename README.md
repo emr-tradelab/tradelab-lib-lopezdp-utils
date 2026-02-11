@@ -36,6 +36,7 @@ from tradelab.lopezdp_utils.hyperparameter_tuning import ...
 from tradelab.lopezdp_utils.bet_sizing import ...
 from tradelab.lopezdp_utils.backtesting_dangers import ...
 from tradelab.lopezdp_utils.backtest_cv import ...
+from tradelab.lopezdp_utils.backtest_synthetic import ...
 ```
 
 ## Modules
@@ -64,7 +65,7 @@ Each submodule corresponds to a chapter/topic from the books:
 | `bet_sizing` | Ch 10 | Bet Sizing (Signal Generation, Dynamic Position Sizing) | ✅ v1 Complete |
 | `backtesting_dangers` | Ch 11 | Backtesting Pitfalls (CSCV, PBO) | ✅ v1 Complete |
 | `backtest_cv` | Ch 12 | Combinatorial Purged Cross-Validation (CPCV) | ✅ v1 Complete |
-| `backtest_synthetic` | Ch 13 | Backtesting on Synthetic Data | Planned |
+| `backtest_synthetic` | Ch 13 | Backtesting on Synthetic Data (OTR, O-U Process) | ✅ v1 Complete |
 | `backtest_statistics` | Ch 14 | Backtest Statistics | Planned |
 | `strategy_risk` | Ch 15 | Understanding Strategy Risk | Planned |
 | `ml_asset_allocation` | Ch 16 | Machine Learning Asset Allocation | Planned |
@@ -291,5 +292,19 @@ Combinatorial Purged Cross-Validation (CPCV) overcomes the "single path" limitat
 - `assemble_backtest_paths()` — Combine OOS forecasts into φ complete backtest paths, each covering all T observations
 
 **Key Insight**: Standard CV and Walk-Forward produce a single backtest path, making it easy to overfit. CPCV generates φ paths (e.g., N=6, k=2 → 5 paths from 15 splits), enabling an empirical Sharpe ratio distribution. A strategy must remain profitable across many "what-if" scenarios, making overfitting significantly harder.
+
+### `backtest_synthetic` — Chapter 13: Backtesting on Synthetic Data
+
+Calibrating optimal trading rules (profit-taking and stop-loss thresholds) using Monte Carlo simulation on synthetic Ornstein-Uhlenbeck price paths.
+
+**O-U Process Estimation** (AFML 13.5.1):
+- `ou_fit()` — Estimate O-U parameters (phi, sigma) from price series via OLS on linearized specification
+- `ou_half_life()` — Half-life of mean reversion: tau = -log(2)/log(phi)
+
+**Optimal Trading Rules** (AFML 13.1-13.2):
+- `otr_batch()` — Monte Carlo engine: simulate O-U paths and compute Sharpe ratios across (profit-taking, stop-loss) mesh
+- `otr_main()` — Run OTR experiment across multiple market regimes (forecast levels x half-lives)
+
+**Key Insight**: Instead of backtesting on historical data (single path, overfitting risk), generate thousands of synthetic paths under estimated O-U parameters. The optimal trading rule is the (profit-taking, stop-loss) pair maximizing Sharpe ratio across regimes. This reveals whether a strategy's edge is structural or spurious.
 
 > See `TODO.md` for detailed progress tracking.
