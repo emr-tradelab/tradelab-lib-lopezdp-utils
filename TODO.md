@@ -24,7 +24,7 @@
 ### Part 3: Backtesting
 - [x] Extract Chapter 10: Bet Sizing
 - [x] Extract Chapter 11: The Dangers of Backtesting
-- [ ] Extract Chapter 12: Backtesting through Cross-Validation
+- [x] Extract Chapter 12: Backtesting through Cross-Validation
 - [ ] Extract Chapter 13: Backtesting on Synthetic Data
 - [ ] Extract Chapter 14: Backtest Statistics
 - [ ] Extract Chapter 15: Understanding Strategy Risk
@@ -284,3 +284,24 @@
 - None — MLAM Section 8 snippets (false_strategy_theorem, familywise_error_rate, type_ii_error_prob) were already extracted in Chapter 4 (sample_weights/strategy_redundancy.py).
 
 **Note:** Chapter 11 is primarily conceptual ("Seven Sins of Quantitative Investing", Marcos' Laws of Backtesting). The CSCV algorithm is the only extractable utility — described theoretically as a seven-step procedure without code. Implementation follows Bailey et al. (2017).
+
+---
+
+### Chapter 12: Backtesting through Cross-Validation
+**Branch:** `feat/chapter12-backtesting-cv`
+**Submodule:** `tradelab.lopezdp_utils.backtest_cv`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- None — Chapter 12 contains no labeled code snippets (no "Snippet 12.x").
+
+**Functionalities (implement from formulas/logic in AFML):**
+- [x] CombinatorialPurgedKFold — scikit-learn-compatible CV splitter that generates all combinatorial train/test splits with purging and embargoing, extending PurgedKFold from Ch.7 (Section 12.3)
+- [x] get_num_splits — Compute number of train/test splits: C(N, k) = N! / (k! * (N-k)!) (Section 12.3)
+- [x] get_num_backtest_paths — Compute number of complete backtest paths: φ[N,k] = k/N * C(N,k) (Section 12.3)
+- [x] assemble_backtest_paths — Combine OOS forecasts from CPCV splits into φ complete backtest paths, each covering all T observations (Section 12.3)
+
+**ML for Asset Managers additions (complementary):**
+- None — MLAM references CPCV as a defense against overfitting but adds no new algorithms beyond what's already extracted (false_strategy_theorem etc. in Ch.4).
+
+**Note:** Chapter 12 is the theoretical framework chapter. No code snippets exist — implementation follows the 5-step algorithm described in Section 12.3. Depends on PurgedKFold from Chapter 7.

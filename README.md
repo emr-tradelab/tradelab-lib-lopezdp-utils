@@ -35,6 +35,7 @@ from tradelab.lopezdp_utils.feature_importance import ...
 from tradelab.lopezdp_utils.hyperparameter_tuning import ...
 from tradelab.lopezdp_utils.bet_sizing import ...
 from tradelab.lopezdp_utils.backtesting_dangers import ...
+from tradelab.lopezdp_utils.backtest_cv import ...
 ```
 
 ## Modules
@@ -62,7 +63,7 @@ Each submodule corresponds to a chapter/topic from the books:
 |--------|---------|-------|--------|
 | `bet_sizing` | Ch 10 | Bet Sizing (Signal Generation, Dynamic Position Sizing) | ✅ v1 Complete |
 | `backtesting_dangers` | Ch 11 | Backtesting Pitfalls (CSCV, PBO) | ✅ v1 Complete |
-| `backtest_cv` | Ch 12 | Backtesting through Cross-Validation | Planned |
+| `backtest_cv` | Ch 12 | Combinatorial Purged Cross-Validation (CPCV) | ✅ v1 Complete |
 | `backtest_synthetic` | Ch 13 | Backtesting on Synthetic Data | Planned |
 | `backtest_statistics` | Ch 14 | Backtest Statistics | Planned |
 | `strategy_risk` | Ch 15 | Understanding Strategy Risk | Planned |
@@ -273,5 +274,22 @@ Tools for detecting backtest overfitting. Chapter 11 is primarily conceptual, in
 - `probability_of_backtest_overfitting()` — Estimate PBO by evaluating all combinatorial train/test splits of strategy trials, computing rank logits, and measuring the fraction with negative logits (below-median OOS performance)
 
 **Key Insight**: If the best in-sample strategy consistently performs below median out-of-sample across combinatorial splits, the backtest is overfit. PBO > 0.5 indicates likely overfitting. For multiple testing corrections (Deflated Sharpe, FWER), see `sample_weights.strategy_redundancy`.
+
+### `backtest_cv` — Chapter 12: Backtesting through Cross-Validation
+
+Combinatorial Purged Cross-Validation (CPCV) overcomes the "single path" limitation of Walk-Forward and standard CV by generating multiple out-of-sample backtest paths.
+
+**Combinatorial Splitter** (AFML 12.3):
+- `CombinatorialPurgedKFold` — scikit-learn-compatible CV splitter generating all C(N,k) train/test splits with purging and embargoing
+- `get_test_group_map()` — Returns which groups were tested in each split (for path assembly)
+
+**Combinatorial Formulas** (AFML 12.3):
+- `get_num_splits()` — Number of unique splits: C(N, k)
+- `get_num_backtest_paths()` — Number of complete paths: φ[N,k] = k/N * C(N,k)
+
+**Path Assembly** (AFML 12.3):
+- `assemble_backtest_paths()` — Combine OOS forecasts into φ complete backtest paths, each covering all T observations
+
+**Key Insight**: Standard CV and Walk-Forward produce a single backtest path, making it easy to overfit. CPCV generates φ paths (e.g., N=6, k=2 → 5 paths from 15 splits), enabling an empirical Sharpe ratio distribution. A strategy must remain profitable across many "what-if" scenarios, making overfitting significantly harder.
 
 > See `TODO.md` for detailed progress tracking.
