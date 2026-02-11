@@ -199,3 +199,43 @@ Changes not staged for commit:
 	modified:   extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main 1085453] chore: automated extraction run 2026-02-11 00:09
+ 1 file changed, 37 insertions(+)
+To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
+   8646387..1085453  main -> main
+
+✅ Changes committed and pushed
+
+**Completed at:** 2026-02-11 00:09:28
+
+---
+## Extraction Run: 2026-02-11 03:09:28
+
+Starting López de Prado extraction workflow...
+**Chapter 11 complete.** Here's the summary:
+
+### Chapter 11: The Dangers of Backtesting
+
+**Submodule:** `tradelab.lopezdp_utils.backtesting_dangers`
+
+**Extracted:**
+- `probability_of_backtest_overfitting()` — CSCV procedure to estimate PBO from a matrix of strategy trial returns. Evaluates all combinatorial train/test splits, finds the best in-sample strategy per split, checks its OOS rank, and reports the fraction of splits where the best IS strategy performed at or below median OOS.
+
+**Not extracted (conceptual only):**
+- "Seven Sins of Quantitative Investing" (checklist, no code)
+- Marcos' Laws of Backtesting (heuristics)
+- MLAM Section 8 snippets were already in `sample_weights.strategy_redundancy`
+
+**Branch lifecycle:** `feat/chapter11-backtesting-dangers` → merged to `main` → deleted.
+
+### Git Status After Extraction
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
