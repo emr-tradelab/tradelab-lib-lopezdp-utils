@@ -239,3 +239,40 @@ Changes not staged for commit:
 	modified:   extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main 32ae677] chore: automated extraction run 2026-02-11 03:18
+ 1 file changed, 40 insertions(+)
+To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
+   1085453..32ae677  main -> main
+
+✅ Changes committed and pushed
+
+**Completed at:** 2026-02-11 03:18:12
+
+---
+## Extraction Run: 2026-02-11 06:18:12
+
+Starting López de Prado extraction workflow...
+Chapter 12 extraction complete. Here's what was implemented:
+
+**`backtest_cv` — Chapter 12: Backtesting through Cross-Validation**
+
+| Function | Description |
+|----------|-------------|
+| `CombinatorialPurgedKFold` | scikit-learn CV splitter generating all C(N,k) combinatorial splits with purging & embargoing |
+| `get_num_splits(N, k)` | Number of train/test splits: C(N,k) |
+| `get_num_backtest_paths(N, k)` | Number of complete backtest paths: φ = k/N × C(N,k) |
+| `assemble_backtest_paths()` | Combines OOS forecasts into φ complete paths covering all observations |
+
+Verified: N=6, k=2 → 15 splits, 5 backtest paths (matches AFML). Branch merged to main.
+
+### Git Status After Extraction
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
