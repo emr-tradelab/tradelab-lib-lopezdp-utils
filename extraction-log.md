@@ -310,3 +310,46 @@ Changes not staged for commit:
 	modified:   extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main acad39f] chore: automated extraction run 2026-02-11 11:57
+ 1 file changed, 34 insertions(+)
+To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
+   6633822..acad39f  main -> main
+
+✅ Changes committed and pushed
+
+**Completed at:** 2026-02-11 11:57:10
+
+---
+## Extraction Run: 2026-02-11 14:57:10
+
+Starting López de Prado extraction workflow...
+Chapter 14 (Backtest Statistics) is complete and merged to main. Here's what was extracted:
+
+**AFML Snippets (4 functions):**
+- `get_bet_timing` — Independent bet boundaries from position flattening/flipping
+- `get_holding_period` — Average holding period via weighted entry time
+- `get_hhi` — HHI concentration index for returns
+- `compute_dd_tuw` — Drawdown series and time-under-water
+
+**AFML Formulas (3 functions):**
+- `sharpe_ratio` — Annualized SR
+- `probabilistic_sharpe_ratio` — PSR adjusted for non-normality
+- `deflated_sharpe_ratio` — DSR correcting for multiple testing
+
+**MLAM Complementary (3 functions):**
+- `strategy_precision` / `strategy_recall` — Discovery metrics based on odds ratio θ
+- `multi_test_precision_recall` — Extended to K trials with Šidàk correction
+
+Next unchecked chapter is **Chapter 15: Understanding Strategy Risk**.
+
+### Git Status After Extraction
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
