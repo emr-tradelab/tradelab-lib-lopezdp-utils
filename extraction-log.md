@@ -353,3 +353,37 @@ Changes not staged for commit:
 	modified:   extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main 1e6a395] chore: automated extraction run 2026-02-11 15:07
+ 1 file changed, 43 insertions(+)
+To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
+   acad39f..1e6a395  main -> main
+
+✅ Changes committed and pushed
+
+**Completed at:** 2026-02-11 15:07:29
+
+---
+## Extraction Run: 2026-02-11 18:07:29
+
+Starting López de Prado extraction workflow...
+**Chapter 15 is not available in NotebookLM.** I queried 4 times across multiple sessions and consistently got "unable to answer" — the chapter content hasn't been uploaded to the notebook.
+
+Per CLAUDE.md rules, I cannot use my own training knowledge for López de Prado theory, and per the skill's error handling: after retry failure, I must skip.
+
+**Options:**
+1. **Add Chapter 15 content to the NotebookLM notebook** — you'd need to upload the relevant pages, then I can retry extraction
+2. **Skip to Chapter 16** — I can try extracting that one instead (though it may have the same issue if later chapters aren't in the notebook)
+3. **Check which chapters are actually in the notebook** — so we know the boundary of what's extractable
+
+Would you like me to try Chapter 16, or do you want to update the notebook first?
+
+### Git Status After Extraction
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
