@@ -27,7 +27,7 @@
 - [x] Extract Chapter 12: Backtesting through Cross-Validation
 - [x] Extract Chapter 13: Backtesting on Synthetic Data
 - [x] Extract Chapter 14: Backtest Statistics
-- [ ] Extract Chapter 15: Understanding Strategy Risk
+- [x] Extract Chapter 15: Understanding Strategy Risk
 - [ ] Extract Chapter 16: Machine Learning Asset Allocation
 
 ### Part 4: Useful Financial Features
@@ -348,3 +348,26 @@
 - [x] multi_test_precision_recall — Extend precision/recall to K independent trials with Šidàk correction (MLAM Section 8)
 
 **Note:** MLAM Snippets 8.1-8.3 (getExpectedMaxSR, getZStat, type1Err, type2Err) were already extracted in Chapter 4 (sample_weights/strategy_redundancy.py). The odds-ratio-based precision/recall framework is complementary and new.
+
+---
+
+### Chapter 15: Understanding Strategy Risk
+**Branch:** `feat/chapter15-strategy-risk`
+**Submodule:** `tradelab.lopezdp_utils.strategy_risk`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] bin_hr — Compute implied precision (minimum p) required to achieve a target Sharpe ratio given asymmetric payoffs (Snippet 15.3)
+- [x] bin_freq — Compute implied betting frequency needed to achieve a target Sharpe ratio (Snippet 15.4)
+- [x] mix_gaussians — Generate random draws from a mixture of two Gaussians for return simulation (Snippet 15.5)
+- [x] prob_failure — Estimate probability that a strategy's precision falls below the required threshold (Snippet 15.5)
+
+**Functionalities (implement from formulas/logic in AFML):**
+- [x] sharpe_ratio_symmetric — Annualized Sharpe ratio for symmetric payouts: θ = √n * (2p−1) / √(4p(1−p)) (Section 15.4.1)
+- [x] implied_precision_symmetric — Implied precision for symmetric payouts (Section 15.4.1)
+- [x] sharpe_ratio_asymmetric — Annualized Sharpe ratio for asymmetric payouts (Section 15.4.2)
+
+**ML for Asset Managers additions (complementary):**
+- None — MLAM Section 8 content (False Strategy Theorem, ONC, FWER, precision/recall) was already extracted in Chapter 4 (sample_weights/strategy_redundancy.py) and Chapter 14 (backtest_statistics/strategy_metrics.py).
+
+**Note:** Chapter 15 models strategy risk as the probability of failing to meet a Sharpe ratio hurdle, using binomial bet framework. Distinct from portfolio risk.
