@@ -38,6 +38,7 @@ from tradelab.lopezdp_utils.backtesting_dangers import ...
 from tradelab.lopezdp_utils.backtest_cv import ...
 from tradelab.lopezdp_utils.backtest_synthetic import ...
 from tradelab.lopezdp_utils.backtest_statistics import ...
+from tradelab.lopezdp_utils.strategy_risk import ...
 ```
 
 ## Modules
@@ -68,7 +69,7 @@ Each submodule corresponds to a chapter/topic from the books:
 | `backtest_cv` | Ch 12 | Combinatorial Purged Cross-Validation (CPCV) | ✅ v1 Complete |
 | `backtest_synthetic` | Ch 13 | Backtesting on Synthetic Data (OTR, O-U Process) | ✅ v1 Complete |
 | `backtest_statistics` | Ch 14 | Backtest Statistics (SR, PSR, DSR, HHI, DD) | ✅ v1 Complete |
-| `strategy_risk` | Ch 15 | Understanding Strategy Risk | Planned |
+| `strategy_risk` | Ch 15 | Understanding Strategy Risk (Binomial Model) | ✅ v1 Complete |
 | `ml_asset_allocation` | Ch 16 | Machine Learning Asset Allocation | Planned |
 
 ### Part 4: Useful Financial Features
@@ -331,5 +332,24 @@ Comprehensive backtest evaluation metrics covering bet characterization, risk me
 - `multi_test_precision_recall()` — Precision/recall under K trials with Sidak correction
 
 **Key Insight**: Standard Sharpe ratio overstates performance when returns are non-Normal or when multiple strategies are tested. PSR adjusts for skewness/kurtosis; DSR further deflates for the number of trials. Strategy precision reveals that even low p-values can yield high false discovery rates when the ratio of true to false strategies (theta) is small.
+
+### `strategy_risk` — Chapter 15: Understanding Strategy Risk
+
+Binomial framework for modeling strategy risk — the probability that a strategy fails to achieve its target Sharpe ratio given its precision, payout structure, and betting frequency.
+
+**Sharpe Ratio Formulas** (AFML 15.4):
+- `sharpe_ratio_symmetric()` — Annualized SR for symmetric payouts (+π/-π)
+- `sharpe_ratio_asymmetric()` — Annualized SR for asymmetric payouts (different PT/SL)
+- `implied_precision_symmetric()` — Minimum precision for symmetric payouts given target SR
+
+**Implied Parameters** (AFML Snippets 15.3-15.4):
+- `bin_hr()` — Minimum precision (hit rate) required for target SR given asymmetric payoffs
+- `bin_freq()` — Minimum betting frequency required for target SR given precision and payoffs
+
+**Strategy Failure** (AFML Snippet 15.5):
+- `mix_gaussians()` — Simulate returns from mixture of two Gaussians (regime model)
+- `prob_failure()` — Probability that strategy's precision falls below required threshold
+
+**Key Insight**: Strategy risk is distinct from portfolio risk. A strategy can have low volatility but high failure probability if its precision (p) is close to the required minimum (p*). Strategies with P[p < p*] > 5% should be discarded. Use mixture-of-Gaussians (not simple averages) for realistic payout estimation.
 
 > See `TODO.md` for detailed progress tracking.
