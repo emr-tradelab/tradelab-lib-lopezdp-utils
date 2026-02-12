@@ -387,3 +387,39 @@ Changes not staged for commit:
 	modified:   extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main e6f1ece] chore: automated extraction run 2026-02-11 18:11
+ 1 file changed, 34 insertions(+)
+To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
+   1e6a395..e6f1ece  main -> main
+
+✅ Changes committed and pushed
+
+**Completed at:** 2026-02-11 18:11:44
+
+---
+## Extraction Run: 2026-02-12 23:56:22
+
+Starting López de Prado extraction workflow...
+**Chapter 15: Understanding Strategy Risk** — complete and merged to main.
+
+**Extracted 7 functions** in `tradelab.lopezdp_utils.strategy_risk`:
+- `sharpe_ratio_symmetric` / `sharpe_ratio_asymmetric` — SR formulas for both payout types
+- `implied_precision_symmetric` — min precision for symmetric payouts
+- `bin_hr` — implied precision for asymmetric payouts (Snippet 15.3)
+- `bin_freq` — implied betting frequency (Snippet 15.4)
+- `mix_gaussians` — mixture-of-Gaussians return simulator (Snippet 15.5)
+- `prob_failure` — strategy failure probability (Snippet 15.5)
+
+No MLAM additions needed (all complementary content was already extracted in Ch.4 and Ch.14).
+
+### Git Status After Extraction
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
