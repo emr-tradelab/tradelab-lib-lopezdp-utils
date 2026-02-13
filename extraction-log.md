@@ -461,3 +461,37 @@ Changes not staged for commit:
 	modified:   extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main 36bb33e] chore: automated extraction run 2026-02-13 03:20
+ 1 file changed, 38 insertions(+)
+To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
+   5e43f8d..36bb33e  main -> main
+
+✅ Changes committed and pushed
+
+**Completed at:** 2026-02-13 03:20:16
+
+---
+## Extraction Run: 2026-02-13 06:20:16
+
+Starting López de Prado extraction workflow...
+**Chapter 17: Structural Breaks — Complete.**
+
+Extracted 10 functions across 3 files:
+
+- **`sadf.py`** — Core SADF utilities: `lag_df`, `get_y_x`, `get_betas`, `get_bsadf`, `sadf_test` (Snippets 17.1-17.4)
+- **`cusum.py`** — `brown_durbin_evans_cusum`, `chu_stinchcombe_white_cusum` (Sections 17.3.1-17.3.2)
+- **`explosiveness.py`** — `chow_type_dickey_fuller`, `qadf_test`, `cadf_test` (Sections 17.4.1, 17.4.3, 17.4.4)
+
+No new MLAM content needed (trend-scanning already in Ch.3). Merged to main.
+
+### Git Status After Extraction
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
