@@ -1,13 +1,6 @@
 ---
 name: building-claude-code-customizations
-description: >
-  Architects and builds Claude Code customization primitives: custom subagents (.claude/agents/),
-  agent skills (.claude/skills/ with SKILL.md), slash commands, CLAUDE.md files, hooks, MCP
-  server configurations, and plugins. Use when creating, editing, debugging, or designing any
-  Claude Code customization file. Also use when the user asks how to extend Claude Code, wants
-  to create a reusable workflow, needs help choosing between skills vs agents vs CLAUDE.md,
-  or wants to set up a plugin. Covers the full customization stack for Claude Code CLI,
-  Claude Code in VS Code, and the Claude Agent SDK.
+description: Architects and builds Claude Code customization primitives: custom subagents (.claude/agents/), agent skills (.claude/skills/ with SKILL.md), slash commands, CLAUDE.md files, hooks, MCP server configurations, and plugins. Use when creating, editing, debugging, or designing any Claude Code customization file. Also use when the user asks how to extend Claude Code, wants to create a reusable workflow, needs help choosing between skills vs agents vs CLAUDE.md, or wants to set up a plugin. Covers the full customization stack for Claude Code CLI, Claude Code in VS Code, and the Claude Agent SDK.
 ---
 
 # Building Claude Code Customizations

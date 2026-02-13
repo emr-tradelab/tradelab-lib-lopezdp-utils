@@ -495,3 +495,41 @@ Changes not staged for commit:
 	modified:   extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main 522d8fc] chore: automated extraction run 2026-02-13 06:28
+ 1 file changed, 34 insertions(+)
+To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
+   36bb33e..522d8fc  main -> main
+
+✅ Changes committed and pushed
+
+**Completed at:** 2026-02-13 06:28:59
+
+---
+## Extraction Run: 2026-02-13 09:28:59
+
+Starting López de Prado extraction workflow...
+Chapter 18 (Entropy Features) extraction complete. Merged to main.
+
+**Summary of what was extracted:**
+
+**AFML Chapter 18 — Entropy Estimators & Applications (5 files):**
+- `estimators.py` — `pmf1`, `plug_in`, `lempel_ziv_lib`, `match_length`, `konto` (Snippets 18.1-18.4)
+- `encoding.py` — `encode_binary`, `encode_quantile`, `encode_sigma` (Section 18.5)
+- `applications.py` — `market_efficiency_metric`, `portfolio_concentration`, `adverse_selection_feature` (Section 18.6)
+
+**MLAM Chapter 3 — Complementary:**
+- `information_theory.py` — `kl_divergence`, `cross_entropy` (Sections 3.5-3.6)
+- Core utilities (`num_bins`, `variation_of_information`, `mutual_information_optimal`) already existed in `data_structures.discretization` — no duplication
+
+### Git Status After Extraction
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   .claude/skills/building-claude-code-customizations/SKILL.md
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
