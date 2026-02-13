@@ -39,6 +39,7 @@ from tradelab.lopezdp_utils.backtest_cv import ...
 from tradelab.lopezdp_utils.backtest_synthetic import ...
 from tradelab.lopezdp_utils.backtest_statistics import ...
 from tradelab.lopezdp_utils.strategy_risk import ...
+from tradelab.lopezdp_utils.ml_asset_allocation import ...
 ```
 
 ## Modules
@@ -70,7 +71,7 @@ Each submodule corresponds to a chapter/topic from the books:
 | `backtest_synthetic` | Ch 13 | Backtesting on Synthetic Data (OTR, O-U Process) | ✅ v1 Complete |
 | `backtest_statistics` | Ch 14 | Backtest Statistics (SR, PSR, DSR, HHI, DD) | ✅ v1 Complete |
 | `strategy_risk` | Ch 15 | Understanding Strategy Risk (Binomial Model) | ✅ v1 Complete |
-| `ml_asset_allocation` | Ch 16 | Machine Learning Asset Allocation | Planned |
+| `ml_asset_allocation` | Ch 16 | ML Asset Allocation (HRP, Denoising, NCO) | ✅ v1 Complete |
 
 ### Part 4: Useful Financial Features
 | Module | Chapter | Topic | Status |
@@ -351,5 +352,38 @@ Binomial framework for modeling strategy risk — the probability that a strateg
 - `prob_failure()` — Probability that strategy's precision falls below required threshold
 
 **Key Insight**: Strategy risk is distinct from portfolio risk. A strategy can have low volatility but high failure probability if its precision (p) is close to the required minimum (p*). Strategies with P[p < p*] > 5% should be discarded. Use mixture-of-Gaussians (not simple averages) for realistic payout estimation.
+
+### `ml_asset_allocation` — Chapter 16: Machine Learning Asset Allocation
+
+Portfolio construction methods that bypass the instability of traditional mean-variance optimization (Markowitz's Curse).
+
+**Hierarchical Risk Parity** (AFML 16.1-16.4):
+- `correl_dist()` — Correlation-based distance metric: d = sqrt(0.5 * (1 - rho))
+- `tree_clustering()` — Hierarchical clustering on distance matrix via scipy linkage
+- `get_quasi_diag()` — Reorder covariance matrix so similar assets cluster along diagonal
+- `get_rec_bipart()` — Top-down recursive bisection allocating by inverse cluster variance
+- `get_ivp()` — Inverse-variance portfolio baseline weights
+- `get_cluster_var()` — Cluster variance via IVP weights on sub-covariance
+- `hrp_alloc()` — Full HRP pipeline: cluster -> quasi-diag -> recursive bisection
+
+**Covariance Matrix Denoising** (MLAM 2.1-2.9):
+- `mp_pdf()` — Marcenko-Pastur PDF for random matrix eigenvalue distribution
+- `find_max_eval()` — Fit MP to find noise/signal cutoff eigenvalue (lambda+)
+- `denoised_corr()` — Constant Residual Eigenvalue method (replace noise with average)
+- `denoised_corr_shrinkage()` — Targeted Shrinkage (blend noise diagonal vs full)
+- `denoise_cov()` — High-level wrapper: covariance -> correlation -> PCA -> denoise -> covariance
+
+**Detoning** (MLAM 2.6):
+- `detone_corr()` — Remove market component (first eigenvector) to amplify sector signals
+
+**Nested Clustered Optimization** (MLAM 7.3-7.6):
+- `opt_port_nco()` — Intracluster + intercluster optimization wrapper (can use any optimizer)
+- Uses ONC clustering from `feature_importance.clustering`
+
+**Simulation** (AFML 16.4-16.5):
+- `generate_data()` — Synthetic correlated time series with common/specific shocks
+- `hrp_mc()` — Monte Carlo comparison of HRP vs IVP out-of-sample performance
+
+**Key Insight**: Traditional optimizers treat every asset as a substitute for every other (complete graph), producing unstable, concentrated portfolios. HRP uses tree clustering to allocate within hierarchical groups, achieving lower OOS variance than CLA (72% less error) and IVP (38% less). Denoising via Marcenko-Pastur further stabilizes the covariance matrix. NCO generalizes by wrapping any optimizer within a cluster-aware framework.
 
 > See `TODO.md` for detailed progress tracking.
