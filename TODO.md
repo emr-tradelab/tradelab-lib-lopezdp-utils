@@ -28,7 +28,7 @@
 - [x] Extract Chapter 13: Backtesting on Synthetic Data
 - [x] Extract Chapter 14: Backtest Statistics
 - [x] Extract Chapter 15: Understanding Strategy Risk
-- [ ] Extract Chapter 16: Machine Learning Asset Allocation
+- [x] Extract Chapter 16: Machine Learning Asset Allocation
 
 ### Part 4: Useful Financial Features
 - [ ] Extract Chapter 17: Structural Breaks
@@ -371,3 +371,32 @@
 - None — MLAM Section 8 content (False Strategy Theorem, ONC, FWER, precision/recall) was already extracted in Chapter 4 (sample_weights/strategy_redundancy.py) and Chapter 14 (backtest_statistics/strategy_metrics.py).
 
 **Note:** Chapter 15 models strategy risk as the probability of failing to meet a Sharpe ratio hurdle, using binomial bet framework. Distinct from portfolio risk.
+
+---
+
+### Chapter 16: Machine Learning Asset Allocation
+**Branch:** `feat/chapter16-asset-allocation`
+**Submodule:** `tradelab.lopezdp_utils.ml_asset_allocation`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] correl_dist — Correlation-based distance metric: d = sqrt(0.5 * (1 - ρ)) (Snippet 16.1/16.4)
+- [x] tree_clustering — Hierarchical tree clustering using scipy linkage on distance matrix (Snippet 16.1)
+- [x] get_quasi_diag — Quasi-diagonalization: reorder covariance matrix so similar items cluster along diagonal (Snippet 16.2)
+- [x] get_rec_bipart — Recursive bisection: top-down weight allocation splitting by inverse cluster variance (Snippet 16.3)
+- [x] get_ivp — Inverse-variance portfolio: w_n = V_{n,n}^{-1} / Σ V_{i,i}^{-1} (Snippet 16.4)
+- [x] get_cluster_var — Compute variance for a cluster using IVP weights on sub-covariance (Snippet 16.4)
+- [x] hrp_alloc — Full HRP allocation: tree clustering → quasi-diag → recursive bisection (Snippet 16.4)
+- [x] generate_data — Synthetic correlated time series with common/specific shocks for testing (Snippet 16.4)
+- [x] hrp_mc — Monte Carlo experiment comparing HRP vs CLA vs IVP out-of-sample (Snippet 16.5)
+
+**ML for Asset Managers additions (complementary):**
+- [x] mp_pdf — Marcenko-Pastur probability density function for random matrix eigenvalue distribution (MLAM Snippet 2.1)
+- [x] find_max_eval — Fit Marcenko-Pastur PDF to find noise/signal eigenvalue cutoff λ+ (MLAM Snippet 2.4)
+- [x] denoised_corr — Constant Residual Eigenvalue denoising method (MLAM Snippet 2.5)
+- [x] denoised_corr_shrinkage — Targeted Shrinkage denoising applied only to noise eigenvectors (MLAM Snippet 2.6)
+- [x] denoise_cov — High-level wrapper: covariance → correlation → PCA → denoise → covariance (MLAM Snippet 2.9)
+- [x] detone_corr — Remove market component (first eigenvector) to amplify sector signals (MLAM Section 2.6)
+- [x] opt_port_nco — Nested Clustered Optimization: intracluster + intercluster optimization wrapper (MLAM Snippets 7.3-7.6)
+
+**Note:** ONC clustering (clusterKMeansBase/Top) already extracted in feature_importance/clustering.py — will import, not duplicate. MLAM denoising/detoning and NCO are major complementary additions addressing covariance matrix instability from a Random Matrix Theory perspective.
