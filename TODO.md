@@ -31,7 +31,7 @@
 - [x] Extract Chapter 16: Machine Learning Asset Allocation
 
 ### Part 4: Useful Financial Features
-- [ ] Extract Chapter 17: Structural Breaks
+- [x] Extract Chapter 17: Structural Breaks
 - [ ] Extract Chapter 18: Entropy Features
 - [ ] Extract Chapter 19: Microstructural Features
 
@@ -400,3 +400,27 @@
 - [x] opt_port_nco — Nested Clustered Optimization: intracluster + intercluster optimization wrapper (MLAM Snippets 7.3-7.6)
 
 **Note:** ONC clustering (clusterKMeansBase/Top) already extracted in feature_importance/clustering.py — will import, not duplicate. MLAM denoising/detoning and NCO are major complementary additions addressing covariance matrix instability from a Random Matrix Theory perspective.
+
+---
+
+### Chapter 17: Structural Breaks
+**Branch:** `feat/chapter17-structural-breaks`
+**Submodule:** `tradelab.lopezdp_utils.structural_breaks`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] get_bsadf — Backward-shifting SADF inner loop: fits ADF regression at each endpoint with expanding start points to detect bubbles (Snippet 17.1)
+- [x] get_y_x — Prepare numpy arrays (y, x) with lagged levels and differences for recursive ADF tests (Snippet 17.2)
+- [x] lag_df — Apply lags to a DataFrame for time-series regression (Snippet 17.3)
+- [x] get_betas — Fit ADF regression specification via OLS, returning t-statistic of unit-root coefficient (Snippet 17.4)
+
+**Functionalities (implement from formulas/logic in AFML):**
+- [x] sadf_test — Full SADF test wrapper: run get_bsadf over expanding windows, return supremum ADF statistic (Section 17.4.2)
+- [x] brown_durbin_evans_cusum — Brown-Durbin-Evans CUSUM test on recursive residuals for structural break detection (Section 17.3.1)
+- [x] chu_stinchcombe_white_cusum — Simplified CUSUM on levels assuming martingale null (Section 17.3.2)
+- [x] chow_type_dickey_fuller — Chow-type DF test for switch from random walk to explosive process (Section 17.4.1)
+- [x] qadf_test — Quantile ADF: use q-quantile instead of supremum for robustness (Section 17.4.3)
+- [x] cadf_test — Conditional ADF: conditional moments of high ADF values for outlier robustness (Section 17.4.4)
+
+**ML for Asset Managers additions (complementary):**
+- None new — Trend-Scanning already extracted in Chapter 3 (labeling/trend_scanning.py). MLAM references structural breaks as features for meta-labeling (conceptual, no new code).
