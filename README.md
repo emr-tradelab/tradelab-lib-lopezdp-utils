@@ -40,6 +40,7 @@ from tradelab.lopezdp_utils.backtest_synthetic import ...
 from tradelab.lopezdp_utils.backtest_statistics import ...
 from tradelab.lopezdp_utils.strategy_risk import ...
 from tradelab.lopezdp_utils.ml_asset_allocation import ...
+from tradelab.lopezdp_utils.structural_breaks import ...
 ```
 
 ## Modules
@@ -76,7 +77,7 @@ Each submodule corresponds to a chapter/topic from the books:
 ### Part 4: Useful Financial Features
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
-| `structural_breaks` | Ch 17 | Structural Breaks (CUSUM, etc.) | Planned |
+| `structural_breaks` | Ch 17 | Structural Breaks (CUSUM, SADF) | ✅ v1 Complete |
 | `entropy` | Ch 18 | Entropy Features | Planned |
 | `microstructure` | Ch 19 | Market Microstructure Features | Planned |
 
@@ -385,5 +386,29 @@ Portfolio construction methods that bypass the instability of traditional mean-v
 - `hrp_mc()` — Monte Carlo comparison of HRP vs IVP out-of-sample performance
 
 **Key Insight**: Traditional optimizers treat every asset as a substitute for every other (complete graph), producing unstable, concentrated portfolios. HRP uses tree clustering to allocate within hierarchical groups, achieving lower OOS variance than CLA (72% less error) and IVP (38% less). Denoising via Marcenko-Pastur further stabilizes the covariance matrix. NCO generalizes by wrapping any optimizer within a cluster-aware framework.
+
+---
+
+### `structural_breaks` — Chapter 17: Structural Breaks
+
+Tests for detecting structural breaks and explosive behavior (bubbles) in financial time series.
+
+**CUSUM Tests** (AFML 17.3):
+- `brown_durbin_evans_cusum()` — CUSUM on recursive residuals to detect parameter instability
+- `chu_stinchcombe_white_cusum()` — Simplified CUSUM on levels assuming martingale null
+
+**SADF Core** (AFML 17.4, Snippets 17.1-17.4):
+- `lag_df()` — Apply lags to a DataFrame for time-series regression
+- `get_y_x()` — Prepare numpy arrays for recursive ADF regressions
+- `get_betas()` — Fit ADF regression specification via OLS
+- `get_bsadf()` — Backward-shifting SADF inner loop (supremum ADF at each endpoint)
+- `sadf_test()` — Full SADF test over expanding windows
+
+**Explosiveness Variants** (AFML 17.4):
+- `chow_type_dickey_fuller()` — Chow-type DF test for regime switch from random walk to explosive
+- `qadf_test()` — Quantile ADF: q-quantile instead of supremum for outlier robustness
+- `cadf_test()` — Conditional ADF: conditional expectation of right tail (Expected Shortfall logic)
+
+**Key Insight**: Standard unit-root tests (ADF) have low power against explosive alternatives because they are designed to detect stationarity. The SADF family addresses this by computing right-tail statistics over expanding windows, detecting transitions to explosive regimes (bubbles). QADF and CADF improve robustness over the pure supremum.
 
 > See `TODO.md` for detailed progress tracking.
