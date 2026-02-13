@@ -423,3 +423,41 @@ Changes not staged for commit:
 	modified:   extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main 5e43f8d] chore: automated extraction run 2026-02-13 00:03
+ 1 file changed, 36 insertions(+)
+To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
+   e6f1ece..5e43f8d  main -> main
+
+✅ Changes committed and pushed
+
+**Completed at:** 2026-02-13 00:03:10
+
+---
+## Extraction Run: 2026-02-13 03:03:10
+
+Starting López de Prado extraction workflow...
+Chapter 16 extraction complete. Here's what was implemented:
+
+**`ml_asset_allocation` submodule** — 4 files, 16 functions:
+
+**HRP (AFML Ch.16):** `correl_dist`, `tree_clustering`, `get_quasi_diag`, `get_rec_bipart`, `get_ivp`, `get_cluster_var`, `hrp_alloc`
+
+**Denoising/Detoning (MLAM Ch.2):** `mp_pdf`, `find_max_eval`, `denoised_corr`, `denoised_corr_shrinkage`, `denoise_cov`, `detone_corr`
+
+**NCO (MLAM Ch.7):** `opt_port_nco` (uses ONC clustering from `feature_importance`)
+
+**Simulation (AFML Ch.16):** `generate_data`, `hrp_mc`
+
+Merged to main, branch cleaned up. Next pending chapters: 17 (Structural Breaks), 18 (Entropy), 19 (Microstructure), 20 (HPC).
+
+### Git Status After Extraction
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
