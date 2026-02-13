@@ -32,7 +32,7 @@
 
 ### Part 4: Useful Financial Features
 - [x] Extract Chapter 17: Structural Breaks
-- [ ] Extract Chapter 18: Entropy Features
+- [x] Extract Chapter 18: Entropy Features
 - [ ] Extract Chapter 19: Microstructural Features
 
 ### Part 5: High-Performance Computing Recipes
@@ -424,3 +424,31 @@
 
 **ML for Asset Managers additions (complementary):**
 - None new — Trend-Scanning already extracted in Chapter 3 (labeling/trend_scanning.py). MLAM references structural breaks as features for meta-labeling (conceptual, no new code).
+
+---
+
+### Chapter 18: Entropy Features
+**Branch:** `feat/chapter18-entropy-features`
+**Submodule:** `tradelab.lopezdp_utils.entropy_features`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] pmf1 — Compute probability mass function for discrete random variable by counting word frequencies (Snippet 18.1)
+- [x] plug_in — Plug-in (Maximum Likelihood) entropy rate estimator: H = -1/w * sum(p(w) * log2(p(w))) (Snippet 18.1)
+- [x] lempel_ziv_lib — Build LZ library of non-redundant substrings for compression estimation (Snippet 18.2)
+- [x] match_length — Find longest matching substring at index i within prior n positions (Snippet 18.3)
+- [x] konto — Kontoyiannis LZ entropy estimator using reciprocal of avg shortest non-redundant substring (Snippet 18.4)
+
+**Functionalities (implement from formulas/logic in AFML):**
+- [x] encode_binary — Encode returns as binary string: 1 if r > 0, 0 if r < 0 (Section 18.5.1)
+- [x] encode_quantile — Discretize returns into equal-frequency quantile bins (Section 18.5.2)
+- [x] encode_sigma — Discretize returns into equal-width bins of sigma step size (Section 18.5.3)
+- [x] market_efficiency_metric — Quantify market efficiency via entropy redundancy of encoded returns (Section 18.6)
+- [x] portfolio_concentration — Meucci's entropy-based portfolio concentration metric (Section 18.6)
+- [x] adverse_selection_feature — Derive adverse selection probability from order flow entropy (Section 18.6)
+
+**ML for Asset Managers additions (complementary):**
+- [x] kl_divergence — Kullback-Leibler divergence between distributions (MLAM Section 3.5)
+- [x] cross_entropy — Cross-entropy scoring function H_C[p||q] = H[p] + D_KL[p||q] (MLAM Section 3.6)
+
+**Note:** AFML Ch.18 focuses on entropy estimation and financial applications (market efficiency, portfolio concentration, adverse selection). MLAM Ch.3 adds information-theoretic distance metrics (MI, VI, KL) for ML feature engineering. Optimal binning (numBins) may already exist in data_structures — will import if so.

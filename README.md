@@ -41,6 +41,7 @@ from tradelab.lopezdp_utils.backtest_statistics import ...
 from tradelab.lopezdp_utils.strategy_risk import ...
 from tradelab.lopezdp_utils.ml_asset_allocation import ...
 from tradelab.lopezdp_utils.structural_breaks import ...
+from tradelab.lopezdp_utils.entropy_features import ...
 ```
 
 ## Modules
@@ -78,7 +79,7 @@ Each submodule corresponds to a chapter/topic from the books:
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
 | `structural_breaks` | Ch 17 | Structural Breaks (CUSUM, SADF) | ✅ v1 Complete |
-| `entropy` | Ch 18 | Entropy Features | Planned |
+| `entropy_features` | Ch 18 | Entropy Features (LZ, Kontoyiannis, MI, VI) | ✅ v1 Complete |
 | `microstructure` | Ch 19 | Market Microstructure Features | Planned |
 
 ### Part 5: High-Performance Computing
@@ -410,5 +411,36 @@ Tests for detecting structural breaks and explosive behavior (bubbles) in financ
 - `cadf_test()` — Conditional ADF: conditional expectation of right tail (Expected Shortfall logic)
 
 **Key Insight**: Standard unit-root tests (ADF) have low power against explosive alternatives because they are designed to detect stationarity. The SADF family addresses this by computing right-tail statistics over expanding windows, detecting transitions to explosive regimes (bubbles). QADF and CADF improve robustness over the pure supremum.
+
+---
+
+### `entropy_features` -- Chapter 18: Entropy Features
+
+Entropy-based features for quantifying information content, market efficiency, and adverse selection in financial time series.
+
+**Entropy Estimators** (AFML Snippets 18.1-18.4):
+- `pmf1()` -- Empirical probability mass function for word frequencies
+- `plug_in()` -- Maximum likelihood entropy rate (simple but biased for short sequences)
+- `lempel_ziv_lib()` -- LZ decomposition into non-redundant substrings
+- `match_length()` -- Longest matching substring search for Kontoyiannis estimator
+- `konto()` -- Kontoyiannis LZ entropy estimator with redundancy metric
+
+**Encoding Schemes** (AFML Section 18.5):
+- `encode_binary()` -- Binary encoding: 1 if return > 0, 0 otherwise
+- `encode_quantile()` -- Equal-frequency quantile bins
+- `encode_sigma()` -- Equal-width bins of fixed sigma step size
+
+**Financial Applications** (AFML Section 18.6):
+- `market_efficiency_metric()` -- Quantify efficiency via entropy redundancy (high = efficient)
+- `portfolio_concentration()` -- Meucci's entropy-based risk concentration across PCA components
+- `adverse_selection_feature()` -- Order flow entropy as proxy for informed trading probability
+
+**Information Theory** (MLAM Chapter 3):
+- `kl_divergence()` -- Kullback-Leibler divergence between distributions
+- `cross_entropy()` -- Cross-entropy scoring function for classification
+
+**Note**: Core information-theoretic utilities (num_bins, variation_of_information, mutual_information_optimal) are in `data_structures.discretization` where they were originally extracted from MLAM Section 3.9.
+
+**Key Insight**: Entropy measures the "compressibility" of a price series. An efficient market generates incompressible (high-entropy) return sequences. Low entropy signals exploitable structure -- bubbles, herding, or informed trading. The Kontoyiannis LZ estimator is preferred over plug-in because it converges faster and handles short sequences better.
 
 > See `TODO.md` for detailed progress tracking.
