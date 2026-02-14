@@ -559,3 +559,24 @@ To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
 ✅ Changes committed and pushed
 
 **Completed at:** 2026-02-14 10:30:06
+
+---
+## Extraction Run: 2026-02-14 20:44:33
+
+Starting López de Prado extraction workflow...
+Auth keeps failing. The browser may not be opening properly or the login isn't completing in time.
+
+**Options:**
+1. You manually fix NotebookLM auth (close all Chrome instances, then I retry)
+2. I proceed using the book's known content for Chapter 20 — the snippets are well-documented (20.1–20.9) and I can verify against the book's structure
+
+Since Chapter 20 is the last one and its content (multiprocessing utilities) is relatively standard Python engineering, should I proceed without NotebookLM, or do you want to troubleshoot auth first?
+
+### Git Status After Extraction
+On branch feat/chapter20-hpc
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
