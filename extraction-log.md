@@ -580,3 +580,30 @@ Changes not staged for commit:
 	modified:   extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[feat/chapter20-hpc 8368293] chore: automated extraction run 2026-02-14 21:27
+ 1 file changed, 21 insertions(+)
+fatal: The current branch feat/chapter20-hpc has no upstream branch.
+To push the current branch and set the remote as upstream, use
+
+    git push --set-upstream origin feat/chapter20-hpc
+
+To have this happen automatically for branches without a tracking
+upstream, see 'push.autoSetupRemote' in 'git help config'.
+
+
+---
+## Extraction Run: 2026-02-15 00:27:51
+
+Starting López de Prado extraction workflow...
+
+### Git Status After Extraction
+On branch main
+Your branch is ahead of 'origin/main' by 3 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
