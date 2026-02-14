@@ -36,7 +36,7 @@
 - [x] Extract Chapter 19: Microstructural Features
 
 ### Part 5: High-Performance Computing Recipes
-- [ ] Extract Chapter 20: Multiprocessing and Vectorization
+- [x] Extract Chapter 20: Multiprocessing and Vectorization
 
 ### Final Steps
 - [ ] Review ML for Asset Managers for complementary content (done per-chapter)
@@ -480,3 +480,28 @@
 - None — MLAM uses microstructure as a case study for theory discovery (VPIN, Flash Crash) but provides no new algorithms beyond AFML Ch.19.
 
 **Note:** Chapter 19 presents a taxonomy of four generations of microstructural features. Only Snippets 19.1-19.2 have explicit code; remaining features are implemented from mathematical definitions. PIN is omitted (requires MLE of Poisson mixture — complex and rarely used directly; VPIN supersedes it).
+
+---
+
+### Chapter 20: Multiprocessing and Vectorization
+**Branch:** `feat/chapter20-hpc`
+**Submodule:** `tradelab.lopezdp_utils.hpc`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] lin_parts — Partition atoms into approximately equal linear segments for multiprocessing (Snippet 20.1)
+- [x] nested_parts — Partition atoms into nested (balanced) segments that equalize workload for upper-triangular tasks (Snippet 20.2)
+- [x] mp_pandas_obj — Main multiprocessing engine: partition DataFrame/Series, dispatch to callback, concatenate results (Snippet 20.3)
+- [x] process_jobs_redux — Unwrap callback arguments with error logging for multiprocessing jobs (Snippet 20.4)
+- [x] process_jobs — Execute jobs using multiprocessing.Pool with imap_unordered (Snippet 20.5)
+- [x] report_progress — Asynchronous progress reporting for long-running multiprocessing tasks (Snippet 20.6)
+- [x] mp_job_list — General-purpose multiprocessing dispatcher for arbitrary job lists (Snippet 20.7)
+- [x] expand_call — Expand keyword arguments dictionary into function call (Snippet 20.9)
+
+**Functionalities (implement from formulas/logic in AFML):**
+- [x] single_thread_dispatch — Single-threaded fallback for debugging multiprocessing pipelines (Section 20.5)
+
+**ML for Asset Managers additions (complementary):**
+- None — MLAM does not cover HPC topics.
+
+**Note:** Chapter 20 is purely Python engineering (no financial theory). These utilities underpin the multiprocessing used in Chapters 3, 4, 10, and others. NotebookLM was unavailable — implemented from well-known AFML snippets. Snippet 20.8 is a debugging example (single-thread), not a standalone function.
