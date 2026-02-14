@@ -549,3 +549,13 @@ Untracked files:
 	docs/
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main 0a12da5] chore: automated extraction run 2026-02-14 10:30
+ 3 files changed, 389 insertions(+)
+ create mode 100644 docs/plans/2026-02-14-create-headless-workflow-design.md
+ create mode 100644 docs/plans/2026-02-14-create-headless-workflow.md
+To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
+   93d87fd..0a12da5  main -> main
+
+✅ Changes committed and pushed
+
+**Completed at:** 2026-02-14 10:30:06
