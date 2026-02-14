@@ -295,11 +295,14 @@ After the interview is complete:
    - `{{main_steps}}` — Q10 (format as numbered markdown steps)
    - `{{quality_gate}}` — Q11
    - `{{external_dependencies}}` — Q12
+   - `{{ERROR_TABLE_ROWS}}` — build from Q12: one row per dependency in format `| <dep> unavailable | Retry once. If still fails, exit with error message |`
    - `{{absolute_script_path}}` — resolve from project path + `scripts/{{name}}.sh`
    - `{{home}}` — resolve from `$HOME`
 
+   Note: `<unit-identifier>` in the skill template is NOT a generation-time placeholder. It is runtime-dynamic text that Claude fills during skill execution based on the current unit of work.
+
 2. **Generate each artifact** using Write tool:
-   - `.claude/skills/{{name}}/SKILL.md` — from Skill Template, embedding the correct git strategy block and error table rows (one row per external dependency)
+   - `.claude/skills/{{name}}/SKILL.md` — from Skill Template, embedding the correct git strategy block and `{{ERROR_TABLE_ROWS}}`
    - `scripts/{{name}}.sh` — from Shell Script Template
    - `scripts/{{name}}.launchd.plist` — from Launchd Plist Template
    - `TODO.md` — from TODO.md Template (create or append)
