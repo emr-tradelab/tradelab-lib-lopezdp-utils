@@ -1,0 +1,302 @@
+# create-headless-workflow Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
+**Goal:** Build a skill that interviews users about repetitive workflows and generates autonomous headless Claude schedules (skill + shell script + launchd plist + TODO.md).
+
+**Architecture:** Single skill file with embedded templates. Interview via AskUserQuestion, then Write tool to generate artifacts. No external dependencies.
+
+**Tech Stack:** Claude Code skills (markdown), bash, launchd plist (XML)
+
+---
+
+### Task 1: Create the skill directory and frontmatter
+
+**Files:**
+- Create: `.claude/skills/create-headless-workflow/SKILL.md`
+
+**Step 1: Create skill file with frontmatter and top-level structure**
+
+Write the SKILL.md with:
+- Frontmatter: name `create-headless-workflow`, description mentioning triggers "create headless claude schedule", "create automated claude workflow", "setup headless workflow", "create headless automated workflow"
+- Top-level sections: Instructions, Interview Flow, Templates, Generation Logic
+
+```markdown
+---
+name: create-headless-workflow
+description: >
+  Creates automated headless Claude workflow schedules. Use when the user says
+  "create headless claude schedule", "create automated claude workflow",
+  "setup headless workflow", or "create headless automated workflow".
+  Interviews the user about their repetitive workflow, then generates 4 artifacts:
+  an autonomous Claude skill, a shell script runner, a launchd plist for scheduling,
+  and a TODO.md for progress tracking.
+---
+```
+
+**Step 2: Commit**
+
+```bash
+git add .claude/skills/create-headless-workflow/SKILL.md
+git commit -m "feat: scaffold create-headless-workflow skill"
+```
+
+---
+
+### Task 2: Write the Interview section
+
+**Files:**
+- Modify: `.claude/skills/create-headless-workflow/SKILL.md`
+
+**Step 1: Add the full interview flow**
+
+Add the Interview section with all 12 questions organized in two groups (base + workflow-specific). Each question specifies:
+- The question text
+- Whether it uses AskUserQuestion (multiple choice) or free text
+- Default values where applicable
+- What the answer maps to in the generated artifacts
+
+Base questions (1-7):
+1. Workflow name (free text, kebab-case)
+2. Workflow description (free text, one sentence)
+3. Git strategy (AskUserQuestion: "merge-to-main" / "PR-to-main")
+4. Schedule interval in hours (AskUserQuestion: 1/2/3/4/6, default 2)
+5. Permission mode (AskUserQuestion: acceptEdits/plan/bypassPermissions, default acceptEdits)
+6. Allowed tools (free text, default: "Read,Write,Edit,Bash,Glob,Grep")
+7. Completion condition (free text — e.g. "all chapters extracted", "queue empty")
+
+Workflow-specific questions (8-12):
+8. What does one unit of work look like? (free text)
+9. How do you track progress? (AskUserQuestion: "TODO.md with checkboxes" / "a queue file" / "other")
+10. What are the main steps in one unit? (free text, numbered list)
+11. Quality gate commands (free text, e.g. "ruff check --fix && ruff format .")
+12. External dependencies (free text, e.g. "NotebookLM", "an API", or "none")
+
+**Step 2: Commit**
+
+```bash
+git add .claude/skills/create-headless-workflow/SKILL.md
+git commit -m "feat: add interview flow to create-headless-workflow"
+```
+
+---
+
+### Task 3: Write the Skill Template section
+
+**Files:**
+- Modify: `.claude/skills/create-headless-workflow/SKILL.md`
+
+**Step 1: Add the skill template**
+
+Add a "Skill Template" section containing the exact markdown template for the generated workflow skill. Use `{{placeholder}}` syntax for interview-derived values. The template follows the same structure as the existing `proceed-with-extraction` skill:
+
+- Frontmatter with `{{name}}` and `{{description}}`
+- `FULLY AUTONOMOUS` execution mode block
+- `Scope Per Session` section using `{{unit_of_work}}`
+- `Full Lifecycle` section with 7 steps:
+  1. Setup (git checkout main, git pull, read TODO.md)
+  2. Branch (git checkout -b feat/{{branch-name}})
+  3. Work (the user's steps from question 10)
+  4. Finalize (quality gate from question 11)
+  5. Commit
+  6. Git completion — TWO variants based on `{{git_strategy}}`:
+     - merge-to-main: merge --no-ff to main, delete branch
+     - PR-to-main: merge to develop, push, gh pr create or update
+  7. Update TODO.md
+- Error handling table with rows for each `{{external_dependency}}` plus standard rows (quality gate fails, merge conflict, nothing to do)
+- Completion condition from question 7
+
+**Step 2: Commit**
+
+```bash
+git add .claude/skills/create-headless-workflow/SKILL.md
+git commit -m "feat: add skill template to create-headless-workflow"
+```
+
+---
+
+### Task 4: Write the Shell Script Template section
+
+**Files:**
+- Modify: `.claude/skills/create-headless-workflow/SKILL.md`
+
+**Step 1: Add the shell script template**
+
+Template for `scripts/{{name}}.sh`:
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+# {{description}}
+# Generated by create-headless-workflow skill
+
+PROJECT_PATH="$(cd "$(dirname "$0")/.." && pwd)"
+LOG_FILE="{{name}}-log.md"
+
+cd "$PROJECT_PATH" || exit 1
+
+# Log run start
+echo "" >> "$LOG_FILE"
+echo "---" >> "$LOG_FILE"
+echo "## Run: $(date '+%Y-%m-%d %H:%M:%S')" >> "$LOG_FILE"
+echo "" >> "$LOG_FILE"
+
+# Run Claude headless
+claude -p "Proceed with {{skill-name}}" \
+  --permission-mode {{permission_mode}} \
+  --allowedTools "{{allowed_tools}}" 2>&1 | tee -a "$LOG_FILE"
+
+# Post-run git operations
+git add -A
+if ! git diff --cached --quiet; then
+    git commit -m "chore: automated {{name}} run $(date '+%Y-%m-%d %H:%M')"
+    git push
+    echo "✅ Changes committed and pushed" >> "$LOG_FILE"
+else
+    echo "ℹ️ No changes to commit" >> "$LOG_FILE"
+fi
+
+echo "**Completed at:** $(date '+%Y-%m-%d %H:%M:%S')" >> "$LOG_FILE"
+```
+
+**Step 2: Commit**
+
+```bash
+git add .claude/skills/create-headless-workflow/SKILL.md
+git commit -m "feat: add shell script template to create-headless-workflow"
+```
+
+---
+
+### Task 5: Write the Launchd Plist Template section
+
+**Files:**
+- Modify: `.claude/skills/create-headless-workflow/SKILL.md`
+
+**Step 1: Add the launchd plist template**
+
+Template for `scripts/{{name}}.launchd.plist`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.user.{{name}}</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-l</string>
+        <string>{{absolute_script_path}}</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>{{interval_seconds}}</integer>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>{{home}}/logs/{{name}}-stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>{{home}}/logs/{{name}}-stderr.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>{{home}}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+</dict>
+</plist>
+```
+
+**Step 2: Commit**
+
+```bash
+git add .claude/skills/create-headless-workflow/SKILL.md
+git commit -m "feat: add launchd plist template to create-headless-workflow"
+```
+
+---
+
+### Task 6: Write the TODO.md Template and Generation Logic section
+
+**Files:**
+- Modify: `.claude/skills/create-headless-workflow/SKILL.md`
+
+**Step 1: Add the TODO.md template**
+
+Template that creates or appends to TODO.md with:
+- A header section for the workflow
+- A global task checklist (populated from the interview if units are enumerable, or a template row if dynamic)
+- Per-unit tracking sections
+
+**Step 2: Add the Generation Logic section**
+
+This section tells Claude exactly what to do after the interview completes:
+
+1. Collect all interview answers into variables
+2. For each template (skill, script, plist, TODO.md):
+   - Replace all `{{placeholders}}` with interview values
+   - Use Write tool to create the file
+   - Make script executable: `chmod +x scripts/{{name}}.sh`
+3. Create `~/logs/` directory if it doesn't exist
+4. Print install instructions:
+   ```
+   cp scripts/{{name}}.launchd.plist ~/Library/LaunchAgents/com.user.{{name}}.plist
+   launchctl load ~/Library/LaunchAgents/com.user.{{name}}.plist
+   ```
+5. Print verification command:
+   ```
+   launchctl list | grep {{name}}
+   ```
+
+**Step 3: Commit**
+
+```bash
+git add .claude/skills/create-headless-workflow/SKILL.md
+git commit -m "feat: add TODO template and generation logic to create-headless-workflow"
+```
+
+---
+
+### Task 7: Review and polish the complete skill
+
+**Files:**
+- Modify: `.claude/skills/create-headless-workflow/SKILL.md`
+
+**Step 1: Read the complete skill file end-to-end**
+
+Verify:
+- Under 500 lines (skill authoring best practice)
+- No persona language ("you are...")
+- All placeholders are consistent across templates
+- Description triggers match design spec
+- Both git strategies (merge / PR) are fully covered in the skill template
+- Error handling table in the skill template covers all external dependencies
+
+**Step 2: Fix any issues found**
+
+**Step 3: Final commit**
+
+```bash
+git add .claude/skills/create-headless-workflow/SKILL.md
+git commit -m "feat: polish create-headless-workflow skill"
+```
+
+---
+
+### Task 8: Test with a dry run
+
+**Step 1: Verify the skill is discoverable**
+
+In a new Claude session in this repo, type "create headless claude schedule" and verify the skill activates.
+
+**Step 2: Walk through the interview**
+
+Provide test answers to verify the full flow generates correct artifacts. Check:
+- Generated skill.md has correct structure and no leftover placeholders
+- Shell script is valid bash (shellcheck if available)
+- Launchd plist is valid XML
+- TODO.md has the expected structure
+
+**Note:** This task is manual — the implementing agent should flag it as ready for user testing rather than attempting to self-test.
