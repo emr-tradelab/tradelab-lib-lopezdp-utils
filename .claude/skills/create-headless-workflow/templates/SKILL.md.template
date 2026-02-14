@@ -1,0 +1,89 @@
+---
+name: proceed-with-{{name}}
+description: >
+  {{description}} Fully autonomous — execute end-to-end without stopping.
+  Use when the user says "proceed with {{name}}" or "continue {{name}}".
+---
+
+# {{name}} Workflow
+
+{{description}}
+
+## Execution Mode
+
+**FULLY AUTONOMOUS** — Execute the complete workflow end-to-end without stopping to ask for permission.
+
+DO NOT ask before:
+- Creating/merging/deleting feature branches
+- Creating directories/files
+- Running quality checks
+- Updating TODO.md or other documentation
+- Committing and pushing
+
+Proceed directly through all steps. Only stop if encountering an unrecoverable error.
+
+## Scope Per Session
+
+{{unit_of_work}}
+
+## Full Lifecycle
+
+### 1. Setup
+
+```
+git checkout main
+git pull origin main
+```
+
+Read TODO.md to determine the next unit of work:
+- If user specified a unit → use that
+- If user said "proceed"/"continue" → find next unchecked item
+- If ALL items are checked → exit with message: "All work complete. Nothing to do."
+
+### 2. Branch
+
+```
+git checkout -b feat/{{name}}-<unit-identifier>
+```
+
+### 3. Work
+
+{{main_steps}}
+
+### 4. Finalize
+
+Run quality gate:
+```
+{{quality_gate}}
+```
+
+Update TODO.md — mark completed items with `[x]`.
+
+### 5. Commit
+
+Stage only the files you created or modified (never use `git add -A`):
+```
+git add <specific files changed>
+git commit -m "feat({{name}}): <description of unit completed>"
+```
+
+### 6. Complete
+
+{{GIT_STRATEGY_BLOCK}}
+
+### 7. Update Progress
+
+Update TODO.md with final status. If all items complete, note completion.
+
+## Error Handling
+
+| Error | Action |
+|-------|--------|
+{{ERROR_TABLE_ROWS}}
+| Quality gate fails | Attempt auto-fix. If still fails, fix manually and retry |
+| Merge conflict | Abort merge, leave feature branch intact, exit with error message |
+| Nothing to do | Exit with message: "All work complete. Nothing to do." |
+
+## Completion Condition
+
+{{completion_condition}}
