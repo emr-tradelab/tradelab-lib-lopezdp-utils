@@ -33,14 +33,14 @@
 ### Part 4: Useful Financial Features
 - [x] Extract Chapter 17: Structural Breaks
 - [x] Extract Chapter 18: Entropy Features
-- [ ] Extract Chapter 19: Microstructural Features
+- [x] Extract Chapter 19: Microstructural Features
 
 ### Part 5: High-Performance Computing Recipes
 - [ ] Extract Chapter 20: Multiprocessing and Vectorization
 
 ### Final Steps
 - [ ] Review ML for Asset Managers for complementary content (done per-chapter)
-- [ ] **Phase 2:** Production optimization pass (pandas → Polars, tests, performance)
+- [-] [**STOP HERE** **DO NOT IMPLEMENT**] **Phase 2:** Production optimization pass (pandas → Polars, tests, performance)
 
 > **Note:** Chapter 1 is introductory (no extractable code). Chapters 21-22 cover quantum computing and specialized HPC topics — will assess for extraction relevance during implementation.
 
@@ -452,3 +452,31 @@
 - [x] cross_entropy — Cross-entropy scoring function H_C[p||q] = H[p] + D_KL[p||q] (MLAM Section 3.6)
 
 **Note:** AFML Ch.18 focuses on entropy estimation and financial applications (market efficiency, portfolio concentration, adverse selection). MLAM Ch.3 adds information-theoretic distance metrics (MI, VI, KL) for ML feature engineering. Optimal binning (numBins) may already exist in data_structures — will import if so.
+
+---
+
+### Chapter 19: Microstructural Features
+**Branch:** `feat/chapter19-microstructural-features`
+**Submodule:** `tradelab.lopezdp_utils.microstructure`
+**Status:** ✅ v1 Complete
+
+**Functionalities (with Python code in AFML):**
+- [x] corwin_schultz_spread — Estimate bid-ask spread from high-low price ratios (Snippet 19.1)
+- [x] get_beta — Beta component for Corwin-Schultz: rolling sum of squared log H/L ratios (Snippet 19.1)
+- [x] get_gamma — Gamma component for Corwin-Schultz: squared log of 2-bar H/L range (Snippet 19.1)
+- [x] get_alpha — Alpha component combining beta and gamma (Snippet 19.1)
+- [x] becker_parkinson_volatility — Robust volatility estimator as byproduct of Corwin-Schultz decomposition (Snippet 19.2)
+
+**Functionalities (implement from formulas/logic in AFML):**
+- [x] tick_rule — Classify trade initiation direction (buy/sell) from price changes (Section 19.3.1)
+- [x] roll_model — Estimate effective bid-ask spread from serial covariance of price changes (Section 19.3.1)
+- [x] high_low_volatility — Parkinson high-low volatility estimator using daily range (Section 19.3.1)
+- [x] kyle_lambda — Price impact coefficient from regression of price changes on signed volume (Section 19.3.2)
+- [x] amihud_lambda — Price impact proxy: mean absolute return divided by dollar volume (Section 19.3.2)
+- [x] hasbrouck_lambda — Effective trading cost via Bayesian regression on signed root-dollar volume (Section 19.3.2)
+- [x] vpin — Volume-Synchronized Probability of Informed Trading using volume-clock buckets (Section 19.3.3)
+
+**ML for Asset Managers additions (complementary):**
+- None — MLAM uses microstructure as a case study for theory discovery (VPIN, Flash Crash) but provides no new algorithms beyond AFML Ch.19.
+
+**Note:** Chapter 19 presents a taxonomy of four generations of microstructural features. Only Snippets 19.1-19.2 have explicit code; remaining features are implemented from mathematical definitions. PIN is omitted (requires MLE of Poisson mixture — complex and rarely used directly; VPIN supersedes it).

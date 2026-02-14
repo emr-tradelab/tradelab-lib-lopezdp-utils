@@ -42,6 +42,7 @@ from tradelab.lopezdp_utils.strategy_risk import ...
 from tradelab.lopezdp_utils.ml_asset_allocation import ...
 from tradelab.lopezdp_utils.structural_breaks import ...
 from tradelab.lopezdp_utils.entropy_features import ...
+from tradelab.lopezdp_utils.microstructure import ...
 ```
 
 ## Modules
@@ -80,7 +81,7 @@ Each submodule corresponds to a chapter/topic from the books:
 |--------|---------|-------|--------|
 | `structural_breaks` | Ch 17 | Structural Breaks (CUSUM, SADF) | ✅ v1 Complete |
 | `entropy_features` | Ch 18 | Entropy Features (LZ, Kontoyiannis, MI, VI) | ✅ v1 Complete |
-| `microstructure` | Ch 19 | Market Microstructure Features | Planned |
+| `microstructure` | Ch 19 | Market Microstructure Features | ✅ v1 Complete |
 
 ### Part 5: High-Performance Computing
 | Module | Chapter | Topic | Status |
@@ -440,6 +441,30 @@ Entropy-based features for quantifying information content, market efficiency, a
 - `cross_entropy()` -- Cross-entropy scoring function for classification
 
 **Note**: Core information-theoretic utilities (num_bins, variation_of_information, mutual_information_optimal) are in `data_structures.discretization` where they were originally extracted from MLAM Section 3.9.
+
+---
+
+### `microstructure` — Chapter 19: Microstructural Features
+
+Market microstructure features organized by generation, from classical spread estimators to modern informed-trading detection.
+
+**First Generation: Spread & Volatility** (AFML 19.3.1):
+- `tick_rule()` — Classify trade initiation direction (+1 buy / -1 sell) from price changes
+- `roll_model()` — Estimate effective bid-ask spread from serial covariance of price changes
+- `high_low_volatility()` — Parkinson estimator using daily high-low range (more efficient than close-to-close)
+- `corwin_schultz_spread()` — Estimate spread from high-low ratios by separating spread and volatility components
+- `becker_parkinson_volatility()` — Robust volatility as byproduct of Corwin-Schultz decomposition
+
+**Second Generation: Price Impact** (AFML 19.3.2):
+- `kyle_lambda()` — Price impact from regression of price changes on signed volume
+- `amihud_lambda()` — Simple illiquidity proxy: mean |return| / dollar volume
+- `hasbrouck_lambda()` — Effective trading cost via regression on signed root-dollar volume
+
+**Third Generation: Informed Trading** (AFML 19.3.3):
+- `volume_bucket()` — Partition trade data into equal-volume buckets (volume clock)
+- `vpin()` — Volume-Synchronized Probability of Informed Trading: real-time order flow toxicity
+
+**Key Insight**: Each generation builds on the previous. First-generation features (spreads, volatility) are observable from price data alone. Second-generation features (lambdas) require volume data and measure price impact. Third-generation features (VPIN) detect informed trading by measuring order flow imbalance under volume clock. Rising VPIN signals increasing adverse selection risk — it predicted the Flash Crash 2 hours before it happened.
 
 **Key Insight**: Entropy measures the "compressibility" of a price series. An efficient market generates incompressible (high-entropy) return sequences. Low entropy signals exploitable structure -- bubbles, herding, or informed trading. The Kontoyiannis LZ estimator is preferred over plug-in because it converges faster and handles short sequences better.
 
