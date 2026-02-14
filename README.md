@@ -43,6 +43,7 @@ from tradelab.lopezdp_utils.ml_asset_allocation import ...
 from tradelab.lopezdp_utils.structural_breaks import ...
 from tradelab.lopezdp_utils.entropy_features import ...
 from tradelab.lopezdp_utils.microstructure import ...
+from tradelab.lopezdp_utils.hpc import ...
 ```
 
 ## Modules
@@ -86,7 +87,7 @@ Each submodule corresponds to a chapter/topic from the books:
 ### Part 5: High-Performance Computing
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
-| `hpc` | Ch 20 | Multiprocessing and Vectorization | Planned |
+| `hpc` | Ch 20 | Multiprocessing and Vectorization | ✅ v1 Complete |
 
 ---
 
@@ -467,5 +468,28 @@ Market microstructure features organized by generation, from classical spread es
 **Key Insight**: Each generation builds on the previous. First-generation features (spreads, volatility) are observable from price data alone. Second-generation features (lambdas) require volume data and measure price impact. Third-generation features (VPIN) detect informed trading by measuring order flow imbalance under volume clock. Rising VPIN signals increasing adverse selection risk — it predicted the Flash Crash 2 hours before it happened.
 
 **Key Insight**: Entropy measures the "compressibility" of a price series. An efficient market generates incompressible (high-entropy) return sequences. Low entropy signals exploitable structure -- bubbles, herding, or informed trading. The Kontoyiannis LZ estimator is preferred over plug-in because it converges faster and handles short sequences better.
+
+---
+
+### `hpc` — Chapter 20: Multiprocessing and Vectorization
+
+Multiprocessing utilities for parallelizing financial ML computations across CPU cores. These functions underpin the parallel operations in Chapters 3, 4, 10, and others.
+
+**Workload Partitioning** (AFML 20.1-20.2):
+- `lin_parts()` — Divide atoms into approximately equal linear segments
+- `nested_parts()` — Balance segments for upper-triangular workloads (e.g., distance matrices)
+
+**Multiprocessing Engine** (AFML 20.3-20.7, 20.9):
+- `mp_pandas_obj()` — Main engine: partition pandas objects, dispatch to callback in parallel, concatenate results
+- `process_jobs()` — Execute jobs via multiprocessing Pool with progress reporting
+- `process_jobs_redux()` — Sequential execution with error logging (fallback)
+- `mp_job_list()` — General-purpose dispatcher for arbitrary job lists
+- `expand_call()` — Unpack keyword argument dictionaries into function calls
+- `report_progress()` — Asynchronous progress reporting for long-running tasks
+
+**Debugging** (AFML 20.5):
+- `single_thread_dispatch()` — Single-threaded fallback wrapping mp_pandas_obj with num_threads=1
+
+**Key Insight**: Financial ML tasks (labeling, sample weights, feature importance) involve applying the same function to many independent subsets of data. `mp_pandas_obj` automates the partition-dispatch-concatenate pattern. Use `lin_parts` for uniform workloads (row-wise operations) and `nested_parts` for triangular workloads (pairwise computations). Set `num_threads=1` for debugging before scaling up.
 
 > See `TODO.md` for detailed progress tracking.
