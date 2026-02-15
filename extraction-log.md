@@ -607,3 +607,37 @@ Changes not staged for commit:
 	modified:   extraction-log.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+[main 63e73e4] chore: automated extraction run 2026-02-15 00:52
+ 1 file changed, 27 insertions(+)
+To https://github.com/emr-tradelab/tradelab-lib-lopezdp-utils.git
+   3478bb1..63e73e4  main -> main
+
+✅ Changes committed and pushed
+
+**Completed at:** 2026-02-15 00:52:52
+
+---
+## Extraction Run: 2026-02-15 04:23:54
+
+Starting López de Prado extraction workflow...
+**All chapters are extracted. Nothing to do.**
+
+Here's the final status:
+- **Chapters 2-20:** All extracted with v1 implementations
+- **ML for Asset Managers:** Complementary content reviewed and extracted per-chapter
+- **Chapters 21-22:** Assessed as hardware-specific (quantum computing, advanced HPC) — no extractable Python utilities
+- **Phase 1 (Pre-Production) is complete**
+
+The next step would be **Phase 2: Production optimization** (pandas → Polars, tests, performance), but TODO.md explicitly marks that as **STOP HERE — DO NOT IMPLEMENT**.
+
+### Git Status After Extraction
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   TODO.md
+	modified:   extraction-log.md
+
+no changes added to commit (use "git add" and/or "git commit -a")

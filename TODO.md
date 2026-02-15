@@ -39,8 +39,10 @@
 - [x] Extract Chapter 20: Multiprocessing and Vectorization
 
 ### Final Steps
-- [ ] Review ML for Asset Managers for complementary content (done per-chapter)
+- [x] Review ML for Asset Managers for complementary content (done per-chapter)
 - [-] [**STOP HERE** **DO NOT IMPLEMENT**] **Phase 2:** Production optimization pass (pandas → Polars, tests, performance)
+
+> **Chapters 21-22:** Assessed — Ch.21 (Brute Force/Quantum) and Ch.22 (High-Performance Computing advanced topics) are hardware-specific with no extractable Python utilities. Skipped by design.
 
 > **Note:** Chapter 1 is introductory (no extractable code). Chapters 21-22 cover quantum computing and specialized HPC topics — will assess for extraction relevance during implementation.
 
