@@ -8,17 +8,11 @@ Part of the Tradelab algorithmic trading ecosystem.
 
 ---
 
-## 🚀 Starting a Work Session
+## Starting a Work Session
 
-**Always begin with:**
-```
-/resume-extraction
-```
+**Phase 1 (Pre-Production) is complete.** All 20 chapters from AFML have been extracted as v1 submodules.
 
-This reads `TODO.md` and shows you:
-- ✅ What's complete
-- ⏭️ Next task to work on
-- 📚 Reminder to query `notebooklm-researcher` agent for theory
+**Current phase: Phase 2 — Production Optimization.** See `WORKFLOW.md` for the Phase 2 scope (Polars migration, tests, error handling, API design).
 
 ---
 
@@ -492,4 +486,4 @@ Multiprocessing utilities for parallelizing financial ML computations across CPU
 
 **Key Insight**: Financial ML tasks (labeling, sample weights, feature importance) involve applying the same function to many independent subsets of data. `mp_pandas_obj` automates the partition-dispatch-concatenate pattern. Use `lin_parts` for uniform workloads (row-wise operations) and `nested_parts` for triangular workloads (pairwise computations). Set `num_threads=1` for debugging before scaling up.
 
-> See `TODO.md` for detailed progress tracking.
+> Phase 1 extraction is complete. See `docs/phase1_extraction/TODO.md` for the archived progress log.

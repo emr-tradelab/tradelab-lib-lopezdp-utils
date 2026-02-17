@@ -10,10 +10,10 @@ The goal is a standalone Python library (`tradelab.lopezdp_utils`) containing ev
 data structure, and utility from these books, organized by chapter/topic as submodules.
 
 **Development is split into two phases:**
-1. **Pre-Production (current):** Extract v1 implementations faithful to the book's code, using the same libraries (pandas, numpy, etc.), with clean Python style and docstrings.
-2. **Production:** Optimize for algo trading (pandas → Polars, tests, performance, validation).
+1. **Pre-Production (completed):** Extract v1 implementations faithful to the book's code, using the same libraries (pandas, numpy, etc.), with clean Python style and docstrings.
+2. **Production (current):** Optimize for algo trading (pandas → Polars, tests, performance, validation).
 
-See `WORKFLOW.md` for the full methodology and `TODO.md` for progress tracking.
+See `WORKFLOW.md` for the full methodology. Phase 1 TODO is archived at `docs/phase1_extraction/TODO.md`.
 
 ---
 
@@ -28,6 +28,5 @@ See `WORKFLOW.md` for the full methodology and `TODO.md` for progress tracking.
 ### 2. Follow the extraction workflow
 
 Before implementing anything, always:
-1. Read `TODO.md` to understand current progress
-2. Follow the session workflow described in `WORKFLOW.md`
-3. Update `TODO.md`, `README.md`, and this file as work progresses
+1. Follow the session workflow described in `WORKFLOW.md`
+2. Update `README.md` and this file as work progresses

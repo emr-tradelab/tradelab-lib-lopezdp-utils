@@ -13,7 +13,7 @@ financial ML utilities from López de Prado's books into this library.
 |--------|------|
 | **NotebookLM** (AFML + ML for Asset Managers) | **Only** source for theory, algorithms, and implementation details |
 | **CLAUDE.md** | Project-specific instructions for Claude Code |
-| **TODO.md** | Progress tracking across all chapters and sessions |
+| **docs/phase1_extraction/TODO.md** | Phase 1 progress log (archived) |
 | **This file** | Workflow rules and methodology |
 
 **Rule:** Claude must NEVER use its own training knowledge for López de Prado theory.
@@ -23,7 +23,7 @@ Always query NotebookLM first. Own knowledge is only used for Python/engineering
 
 ## Two-Phase Development
 
-### Phase 1: Pre-Production (Current)
+### Phase 1: Pre-Production (Completed)
 
 Extract all functionalities chapter by chapter, creating v1 implementations.
 
@@ -37,7 +37,7 @@ Extract all functionalities chapter by chapter, creating v1 implementations.
 - No tests, no performance optimization, no error handling beyond what the book provides
 - Each chapter = one submodule under `tradelab.lopezdp_utils.<chapter_topic>`
 
-### Phase 2: Production Optimization (Later)
+### Phase 2: Production Optimization (Current)
 
 Convert all v1 code into production-grade, high-performance library code.
 
