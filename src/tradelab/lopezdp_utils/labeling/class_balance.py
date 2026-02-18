@@ -1,65 +1,74 @@
-"""Utilities for handling class imbalance in labeled datasets.
+"""Utilities for handling class imbalance in labeled financial datasets.
 
-This module provides functions to address class imbalance issues that commonly
-arise in financial machine learning, where certain market outcomes may be rare
-but still present enough to distract classifiers from learning meaningful patterns.
-
-Reference: AFML Chapter 3, Section 3.9
+Reference: AFML Chapter 3, Section 3.9 and Chapter 4, Section 4.7
 """
 
-import pandas as pd
+from __future__ import annotations
+
+import numpy as np
+import polars as pl
+from sklearn.utils.class_weight import compute_class_weight
 
 
-def drop_labels(events: pd.DataFrame, min_pct: float = 0.05) -> pd.DataFrame:
-    """Recursively drop under-populated labels to handle class imbalance.
+def drop_labels(events: pl.DataFrame, min_pct: float = 0.05) -> pl.DataFrame:
+    """Recursively drop under-populated label classes to handle class imbalance.
 
-    Many ML classifiers perform poorly when classes are extremely imbalanced.
-    A model trained on a dataset where one class represents 99% of observations
-    may simply learn to always predict that class, achieving high "accuracy"
-    but zero predictive power for rare, catalytic events.
-
-    This function iteratively removes the rarest label class until all remaining
-    classes meet a minimum frequency threshold. This forces the ML algorithm to
-    focus on common, statistically relevant outcomes rather than being distracted
-    by noise or outliers that appear too infrequently to form reliable patterns.
-
-    The function preserves at least binary classification (stops at 2 classes).
+    Iteratively removes the rarest class until all remaining classes meet the
+    minimum frequency threshold, preserving at least binary classification.
 
     Args:
-        events: DataFrame containing generated labels, typically in a 'bin' column.
-            Usually the output from get_bins() or get_bins_meta().
-        min_pct: Minimum threshold fraction for a class to be retained.
-            Default is 0.05 (5%). Classes below this frequency are dropped.
+        events: DataFrame with a 'label' column containing class labels.
+        min_pct: Minimum fraction for a class to be retained. Default 0.05 (5%).
 
     Returns:
-        Filtered DataFrame with only labels meeting the minimum frequency
-        threshold. All observations associated with dropped labels are removed.
+        Filtered DataFrame with only labels meeting the threshold.
 
     Reference:
-        Snippet 3.8 in AFML Chapter 3, Section 3.9
-
-    Example:
-        >>> labels = get_bins(events, close)
-        >>> print(labels['bin'].value_counts(normalize=True))
-        # 1     0.85
-        # -1    0.13
-        # 0     0.02
-        >>> balanced = drop_labels(labels, min_pct=0.05)
-        >>> print(balanced['bin'].value_counts(normalize=True))
-        # 1     0.87
-        # -1    0.13
-        # (0 was dropped as it was below 5%)
+        Snippet 3.8, AFML Chapter 3
     """
     while True:
-        # Calculate normalized frequency of each label
-        df0 = events["bin"].value_counts(normalize=True)
+        # Compute value counts (normalized)
+        vc = events["label"].value_counts(sort=True).with_columns(
+            (pl.col("count") / pl.col("count").sum()).alias("pct")
+        )
 
-        # Stop if minimum frequency meets threshold or fewer than 3 classes remain
-        if df0.min() > min_pct or df0.shape[0] < 3:
+        min_pct_val = float(vc["pct"].min())
+        n_classes = len(vc)
+
+        # Stop if threshold met or only 1 class remains
+        if min_pct_val > min_pct or n_classes <= 1:
             break
 
-        # Identify and drop the rarest label
-        print(f"Dropped label {df0.idxmin()}, frequency: {df0.min():.4f}")
-        events = events[events["bin"] != df0.idxmin()]
+        # Drop the rarest class
+        rarest = vc.sort("pct")["label"][0]
+        events = events.filter(pl.col("label") != rarest)
 
     return events
+
+
+def get_class_weights(
+    y: pl.Series | np.ndarray,
+    method: str = "balanced",
+) -> dict:
+    """Compute class weights to correct for imbalanced datasets.
+
+    Rare classes receive higher weights so the model doesn't ignore them.
+
+    Args:
+        y: Series or array of target labels.
+        method: Weighting method — "balanced" or "balanced_subsample".
+
+    Returns:
+        Dictionary mapping class label to weight.
+
+    Reference:
+        AFML Chapter 4, Section 4.7
+    """
+    if isinstance(y, pl.Series):
+        y_array = y.to_numpy()
+    else:
+        y_array = y
+
+    classes = np.unique(y_array)
+    weights = compute_class_weight(class_weight=method, classes=classes, y=y_array)
+    return dict(zip(classes, weights))
