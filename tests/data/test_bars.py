@@ -1,8 +1,6 @@
 """Tests for data.bars — bar construction from tick/time data."""
 
-import numpy as np
 import polars as pl
-import pytest
 
 
 class TestTimeBars:

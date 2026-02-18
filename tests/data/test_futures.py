@@ -1,8 +1,6 @@
 """Tests for data.futures — roll-adjusted continuous contracts."""
 
-import numpy as np
 import polars as pl
-import pytest
 
 
 class TestRollGaps:

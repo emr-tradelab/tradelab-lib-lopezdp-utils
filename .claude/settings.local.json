@@ -11,7 +11,9 @@
       "Grep",
       "mcp__notebooklm__select_notebook",
       "Bash(git -C:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Skill(polars-nautilus-context)",
+      "mcp__context7"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -10,7 +10,6 @@ import numpy as np
 import polars as pl
 from sklearn.linear_model import LinearRegression
 
-
 # ---------------------------------------------------------------------------
 # Trade Classification
 # ---------------------------------------------------------------------------
