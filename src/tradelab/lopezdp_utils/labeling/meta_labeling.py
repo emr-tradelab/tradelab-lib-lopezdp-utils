@@ -2,184 +2,184 @@
 
 Meta-labeling is a secondary ML layer that learns how to use a primary model.
 The primary model decides the side (long/short), while the secondary model
-determines the size of the bet (binary "act" or "pass").
+determines whether to act (binary 0/1 labels).
 
-This allows:
-- Primary models to focus on high recall (find opportunities)
-- Meta-models to focus on high precision (filter false positives)
-- Integration of discretionary/fundamental insights (side) with ML (sizing)
+This enables:
+- Primary models to focus on recall (find all opportunities)
+- Meta-models to focus on precision (filter false positives)
+- Integration of discretionary/fundamental side views with ML sizing
 
 Reference: AFML Chapter 3, Section 3.6
 """
 
-import numpy as np
-import pandas as pd
+from __future__ import annotations
 
-from .triple_barrier import apply_pt_sl_on_t1
+import numpy as np
+import polars as pl
+
+from .triple_barrier import apply_pt_sl_on_t1, _validate_close, _validate_t1
 
 
 def get_events_meta(
-    close: pd.Series,
-    t_events: pd.DatetimeIndex,
+    close: pl.DataFrame,
+    t_events: pl.Series,
     pt_sl: list[float] | float,
-    trgt: pd.Series,
+    trgt: pl.DataFrame,
     min_ret: float,
-    num_threads: int = 1,
-    t1: pd.Series | bool = False,
-    side: pd.Series | None = None,
-) -> pd.DataFrame:
+    t1: pl.DataFrame | None = None,
+    side: pl.Series | None = None,
+) -> pl.DataFrame:
     """Extended get_events with meta-labeling support (asymmetric barriers).
 
-    This version extends the standard triple-barrier method by allowing the
-    researcher to specify the position side via a primary model. When side
-    is provided, the profit-taking and stop-loss barriers can be asymmetric
-    (different widths).
-
-    When side is None, this function behaves identically to get_events() with
-    symmetric barriers. When side is provided, it enables meta-labeling where:
-    - Primary model predicts the side (long=1, short=-1)
-    - Secondary meta-model learns to predict success probability (act/pass)
+    When `side` is None, symmetric barriers are used (same as get_events).
+    When `side` is provided, barriers are asymmetric and the 'side' column
+    is preserved in the output for use by get_bins_meta.
 
     Args:
-        close: Series of prices used to track the security's path.
-        t_events: DatetimeIndex of timestamps that seed each triple-barrier event.
-        pt_sl: If side is None, a single float for symmetric barriers.
-            If side is provided, a list of two floats [profit_taking, stop_loss]
-            for asymmetric barriers.
-        trgt: Series of targets (absolute returns), typically from volatility
-            estimator like daily_volatility().
-        min_ret: Minimum target return required to initiate a triple-barrier search.
-        num_threads: Number of threads for parallel processing. Default 1 (serial).
-            Note: Full multiprocessing support via mpPandasObj (Chapter 20) will
-            be integrated in production phase.
-        t1: Series of vertical barrier timestamps (expiration limits), or False
-            to disable vertical barriers.
-        side: Optional Series with position sides (1 for long, -1 for short).
-            If None, symmetric barriers are used for learning both side and size.
-            If provided, enables meta-labeling with asymmetric barriers.
+        close: DataFrame with 'timestamp' and 'close' columns.
+        t_events: Series of event timestamps.
+        pt_sl: Symmetric float when side=None, or [profit_taking, stop_loss]
+            list when side is provided.
+        trgt: DataFrame with 'timestamp' and 'volatility' columns.
+        min_ret: Minimum volatility threshold to include an event.
+        t1: Optional vertical barrier DataFrame with 'timestamp' and 't1' columns.
+        side: Optional Series with primary model side predictions (1 or -1).
 
     Returns:
-        DataFrame with columns:
-            - 't1': Timestamp of first barrier touched
-            - 'trgt': Target return (volatility) for the event
-            - 'side': Position side (only if side parameter was provided)
+        DataFrame with 'timestamp', 't1', 'trgt', and optionally 'side' columns.
+        t1 is guaranteed to have no nulls.
 
     Reference:
-        Snippet 3.6 in AFML Chapter 3, Section 3.6
-
-    Example:
-        >>> # Standard triple-barrier (symmetric)
-        >>> events = get_events_meta(close, t_events, pt_sl=1.0, trgt=vol,
-        ...                          min_ret=0.01, t1=t1, side=None)
-        >>>
-        >>> # Meta-labeling (asymmetric barriers)
-        >>> primary_side = pd.Series(1, index=t_events)  # Primary model predictions
-        >>> events = get_events_meta(close, t_events, pt_sl=[2.0, 1.0], trgt=vol,
-        ...                          min_ret=0.01, t1=t1, side=primary_side)
+        Snippet 3.6, AFML Chapter 3
     """
-    # Align target with event timestamps
-    trgt = trgt.loc[t_events]
+    _validate_close(close)
 
-    # Filter for minimum return threshold
-    trgt = trgt[trgt > min_ret]
+    # Join trgt onto t_events
+    events = pl.DataFrame({"timestamp": t_events}).join(
+        trgt.rename({"volatility": "trgt"}),
+        on="timestamp",
+        how="left",
+    )
 
-    # Set up vertical barriers
-    if t1 is False:
-        t1 = pd.Series(pd.NaT, index=t_events)
+    # Filter by min_ret
+    events = events.filter(pl.col("trgt") > min_ret).drop_nulls("trgt")
 
-    # Configure side and barriers
-    if side is None:
-        # Standard mode: symmetric barriers, unknown side
-        side_ = pd.Series(1.0, index=trgt.index)
-        pt_sl_ = [pt_sl, pt_sl]
+    # Add vertical barrier
+    if t1 is not None:
+        events = events.join(t1.rename({"t1": "t1_vert"}), on="timestamp", how="left")
+        last_ts = close["timestamp"][-1]
+        events = events.with_columns(pl.col("t1_vert").fill_null(last_ts))
     else:
-        # Meta-labeling mode: asymmetric barriers, known side from primary model
-        side_ = side.loc[trgt.index]
-        pt_sl_ = pt_sl[:2]  # Use first two elements [profit_taking, stop_loss]
+        last_ts = close["timestamp"][-1]
+        events = events.with_columns(pl.lit(last_ts).alias("t1_vert"))
 
-    # Create events object
-    events = pd.concat({"t1": t1, "trgt": trgt, "side": side_}, axis=1).dropna(subset=["trgt"])
-
-    # Apply barriers to find first touches
-    # Note: v1 uses serial processing. Full multiprocessing via mpPandasObj
-    # (from Chapter 20) will be integrated in production phase.
-    df0 = apply_pt_sl_on_t1(close=close, events=events, pt_sl=pt_sl_, molecule=events.index)
-
-    # Get earliest barrier touch for each event
-    events["t1"] = df0.dropna(how="all").min(axis=1)
-
-    # Clean up: drop side column if not in meta-labeling mode
+    # Configure side and pt_sl
     if side is None:
-        events = events.drop("side", axis=1)
+        pt_sl_list = [float(pt_sl), float(pt_sl)]
+        side_col = pl.lit(1.0)
+    else:
+        pt_sl_list = [float(pt_sl[0]), float(pt_sl[1])]
+        # Align side with filtered events
+        side_df = pl.DataFrame({"timestamp": t_events, "side": side})
+        events = events.join(side_df, on="timestamp", how="left")
+        side_col = pl.col("side")
 
-    return events
+    if side is None:
+        events = events.with_columns(pl.lit(1.0).alias("side"))
+
+    # Rename t1_vert to t1 for apply_pt_sl_on_t1
+    events_for_loop = events.rename({"t1_vert": "t1"})
+
+    # Extract NumPy arrays
+    close_np = close["close"].to_numpy()
+    ts_np = close["timestamp"].cast(pl.Int64).to_numpy()
+
+    # Run barrier detection
+    barrier_results = apply_pt_sl_on_t1(
+        close_np=close_np,
+        ts_np=ts_np,
+        events_df=events_for_loop,
+        pt_sl=pt_sl_list,
+    )
+
+    # Find earliest barrier touch
+    barrier_results = barrier_results.with_columns(
+        pl.min_horizontal(
+            pl.col("t1_barrier"),
+            pl.col("sl").fill_null(pl.col("t1_barrier")),
+            pl.col("pt").fill_null(pl.col("t1_barrier")),
+        ).alias("t1_first")
+    )
+
+    # Join back
+    result = events.join(
+        barrier_results.select(["timestamp", "t1_first"]),
+        on="timestamp",
+        how="left",
+    )
+
+    # Ensure t1 has no nulls
+    last_ts = close["timestamp"][-1]
+    result = result.with_columns(pl.col("t1_first").fill_null(last_ts).alias("t1"))
+
+    # Build output columns
+    keep_cols = ["timestamp", "t1", "trgt"]
+    if side is not None:
+        keep_cols.append("side")
+
+    return result.select(keep_cols)
 
 
-def get_bins_meta(events: pd.DataFrame, close: pd.Series) -> pd.DataFrame:
+def get_bins_meta(events: pl.DataFrame, close: pl.DataFrame) -> pl.DataFrame:
     """Generate labels from triple-barrier events with meta-labeling support.
 
-    This extended version handles two cases:
-
-    Case 1 - Standard labeling ('side' not in events):
-        Labels are {-1, 1} based on price action (sign of return).
-        Used when learning both side and size from price movements.
-
-    Case 2 - Meta-labeling ('side' in events):
-        Labels are {0, 1} based on PnL success/failure.
-        - Return is multiplied by side to get PnL
-        - 1 = primary model's predicted side was profitable
-        - 0 = primary model's prediction resulted in loss or wash
-        Used when primary model provides side, meta-model learns sizing.
+    Standard mode (no 'side' column): labels are {-1, 0, 1} based on return sign.
+    Meta-labeling mode ('side' column present): labels are {0, 1}, where 1 means
+    the primary model's predicted direction was profitable.
 
     Args:
-        events: DataFrame output from get_events() or get_events_meta(), with
-            index as event start times and 't1' column containing timestamps
-            of first barrier touches. May optionally contain 'side' column.
-        close: Series of prices used to calculate returns.
+        events: DataFrame with 'timestamp', 't1', and optionally 'side' columns.
+        close: DataFrame with 'timestamp' and 'close' columns.
 
     Returns:
-        DataFrame with index matching events, containing:
-            - 'ret': Realized return (or PnL if side is present)
-            - 'bin': Label (-1, 1) for standard mode or (0, 1) for meta-labeling
+        DataFrame with 'timestamp', 'ret', 'label' columns.
 
     Reference:
-        Snippet 3.7 in AFML Chapter 3, Section 3.6
-
-    Example:
-        >>> # Standard labeling
-        >>> events = get_events_meta(close, t_events, pt_sl=1.0, trgt=vol,
-        ...                          min_ret=0.01, t1=t1)
-        >>> labels = get_bins_meta(events, close)
-        >>> # labels['bin'] contains -1 or 1
-        >>>
-        >>> # Meta-labeling
-        >>> events = get_events_meta(close, t_events, pt_sl=[2.0, 1.0], trgt=vol,
-        ...                          min_ret=0.01, t1=t1, side=primary_side)
-        >>> labels = get_bins_meta(events, close)
-        >>> # labels['bin'] contains 0 or 1
+        Snippet 3.7, AFML Chapter 3
     """
-    # Drop events with no barrier touch
-    events_ = events.dropna(subset=["t1"])
+    _validate_t1(events)
 
-    # Get all unique timestamps (event starts and barrier touches)
-    px = events_.index.union(events_["t1"].values).drop_duplicates()
+    is_meta = "side" in events.columns
 
-    # Align prices to these timestamps
-    px = close.reindex(px, method="bfill")
+    # Join close prices at t0 and t1
+    result = (
+        events.join(close.rename({"close": "close_t0"}), on="timestamp", how="left")
+        .join(
+            close.rename({"timestamp": "t1", "close": "close_t1"}),
+            on="t1",
+            how="left",
+        )
+        .with_columns(
+            (pl.col("close_t1") / pl.col("close_t0") - 1).alias("ret")
+        )
+    )
 
-    # Calculate returns
-    out = pd.DataFrame(index=events_.index)
-    out["ret"] = px.loc[events_["t1"].values].values / px.loc[events_.index] - 1
+    if is_meta:
+        # Multiply return by side to get PnL perspective
+        result = result.with_columns(
+            (pl.col("ret") * pl.col("side")).alias("ret")
+        )
+        # Binary label: 1 if trade was profitable, 0 otherwise
+        result = result.with_columns(
+            pl.when(pl.col("ret") > 0)
+            .then(pl.lit(1))
+            .otherwise(pl.lit(0))
+            .cast(pl.Int8)
+            .alias("label")
+        )
+    else:
+        result = result.with_columns(
+            pl.col("ret").sign().cast(pl.Int8).alias("label")
+        )
 
-    # If side is present, this is meta-labeling: multiply by side to get PnL
-    if "side" in events_.columns:
-        out["ret"] *= events_["side"]
-
-    # Generate labels
-    out["bin"] = np.sign(out["ret"])
-
-    # For meta-labeling: convert to binary {0, 1} where 0 = loss/wash, 1 = profit
-    if "side" in events_.columns:
-        out.loc[out["ret"] <= 0, "bin"] = 0
-
-    return out
+    return result.select(["timestamp", "ret", "label"])
