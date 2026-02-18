@@ -43,7 +43,18 @@ pl.col("timestamp").dt.truncate("1m")  # string interval accepted
 pl.when(condition).then(value).otherwise(other_value)
 ```
 
+#### Polars Series with when/then/otherwise
+```python
+# pl.when() returns Expr — cannot call .to_numpy() on it directly
+# When working with Series (not DataFrame), use NumPy instead:
+arr = series.to_numpy()
+result = np.where(condition, value_true, value_false)
+# Then wrap back: pl.Series(name, result)
+```
+
 ### Common Pitfalls
 - `groupby_dynamic` is deprecated → use `group_by_dynamic`
 - `frame_equal()` was removed → use `.equals()`
 - Always call `.set_sorted()` on datetime columns before `group_by_dynamic` for performance
+- `pl.when(series > 0).then(...)` on a bare Series context returns `Expr`, not `Series` — use NumPy for Series-level conditional ops
+- `pyarrow` is not installed in this project — avoid `df.to_pandas()` which requires it
