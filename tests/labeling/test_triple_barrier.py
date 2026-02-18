@@ -1,8 +1,6 @@
 """Tests for labeling.triple_barrier."""
 
-import numpy as np
 import polars as pl
-import pytest
 
 
 class TestDailyVolatility:
@@ -55,7 +53,7 @@ class TestFixedTimeHorizon:
 
         result = fixed_time_horizon(close_prices, horizon=10, threshold=0.005)
         labels = result["label"].unique().sort().to_list()
-        assert all(l in [-1, 0, 1] for l in labels)
+        assert all(lbl in [-1, 0, 1] for lbl in labels)
 
 
 class TestTripleBarrierLabels:
@@ -92,7 +90,7 @@ class TestTripleBarrierLabels:
             vol_span=50,
         )
         labels = result["label"].unique().sort().to_list()
-        assert all(l in [-1, 0, 1] for l in labels)
+        assert all(lbl in [-1, 0, 1] for lbl in labels)
 
     def test_t1_validates_not_null(self, close_prices):
         """The t1 column must never contain nulls — this is a safety guardrail."""

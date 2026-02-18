@@ -22,14 +22,16 @@ def ohlcv_1min() -> pl.DataFrame:
     open_ = close + np.random.randn(n) * 0.1
     volume = np.random.randint(100, 10000, size=n).astype(float)
 
-    return pl.DataFrame({
-        "timestamp": timestamps,
-        "open": open_,
-        "high": high,
-        "low": low,
-        "close": close,
-        "volume": volume,
-    })
+    return pl.DataFrame(
+        {
+            "timestamp": timestamps,
+            "open": open_,
+            "high": high,
+            "low": low,
+            "close": close,
+            "volume": volume,
+        }
+    )
 
 
 @pytest.fixture
@@ -46,11 +48,13 @@ def tick_data() -> pl.DataFrame:
     prices = 100.0 + np.cumsum(np.random.randn(n) * 0.1)
     volumes = np.random.randint(1, 100, size=n).astype(float)
 
-    return pl.DataFrame({
-        "timestamp": timestamps,
-        "price": prices,
-        "volume": volumes,
-    })
+    return pl.DataFrame(
+        {
+            "timestamp": timestamps,
+            "price": prices,
+            "volume": volumes,
+        }
+    )
 
 
 @pytest.fixture
@@ -66,7 +70,9 @@ def close_series() -> pl.DataFrame:
     )
     close = 100.0 + np.cumsum(np.random.randn(n) * 0.3)
 
-    return pl.DataFrame({
-        "timestamp": timestamps,
-        "close": close,
-    })
+    return pl.DataFrame(
+        {
+            "timestamp": timestamps,
+            "close": close,
+        }
+    )

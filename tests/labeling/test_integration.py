@@ -2,7 +2,6 @@
 
 import numpy as np
 import polars as pl
-import pytest
 
 
 class TestLabelingToWeightsPipeline:
@@ -10,7 +9,6 @@ class TestLabelingToWeightsPipeline:
 
     def test_full_pipeline(self, close_prices):
         from tradelab.lopezdp_utils.labeling import (
-            daily_volatility,
             get_avg_uniqueness,
             get_ind_matrix,
             get_time_decay,
@@ -89,7 +87,7 @@ class TestLabelingToWeightsPipeline:
         bins = get_bins_meta(events, close_prices)
         assert "label" in bins.columns
         labels = bins["label"].unique().sort().to_list()
-        assert all(l in [0, 1] for l in labels)
+        assert all(lbl in [0, 1] for lbl in labels)
 
         # Weights should still work with meta-labeling events
         co_events = mp_num_co_events(

@@ -90,14 +90,10 @@ def opt_port_nco(
         mu = pd.Series(mu)
 
     # step 1: clustering
-    corr1 = pd.DataFrame(
-        _cov2corr(cov.values), index=cov.index, columns=cov.columns
-    )
+    corr1 = pd.DataFrame(_cov2corr(cov.values), index=cov.index, columns=cov.columns)
     if max_num_clusters is None:
         max_num_clusters = max(2, corr1.shape[0] // 2)
-    corr1, clstrs, _ = cluster_kmeans_base(
-        corr1, max_num_clusters=max_num_clusters, n_init=10
-    )
+    corr1, clstrs, _ = cluster_kmeans_base(corr1, max_num_clusters=max_num_clusters, n_init=10)
 
     # step 2: intracluster allocations
     w_intra = pd.DataFrame(0.0, index=cov.index, columns=clstrs.keys())
@@ -114,9 +110,7 @@ def opt_port_nco(
     mu_ = None if mu is None else w_intra.T.dot(mu)
     if mu_ is not None:
         mu_ = mu_.values.reshape(-1, 1)
-    w_inter = pd.Series(
-        _opt_port(cov_.values, mu_).flatten(), index=cov_.index
-    )
+    w_inter = pd.Series(_opt_port(cov_.values, mu_).flatten(), index=cov_.index)
 
     # final: product of intra and inter
     nco = w_intra.mul(w_inter, axis=1).sum(axis=1)

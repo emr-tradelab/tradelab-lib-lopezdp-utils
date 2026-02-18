@@ -98,10 +98,12 @@ def add_vertical_barrier(
 
     t1_values = all_ts[end_idxs]
 
-    return pl.DataFrame({
-        "timestamp": t_events,
-        "t1": pl.Series(t1_values).cast(pl.Datetime("us")),
-    })
+    return pl.DataFrame(
+        {
+            "timestamp": t_events,
+            "t1": pl.Series(t1_values).cast(pl.Datetime("us")),
+        }
+    )
 
 
 def fixed_time_horizon(
@@ -128,9 +130,7 @@ def fixed_time_horizon(
     """
     _validate_close(close)
     result = (
-        close.with_columns(
-            (pl.col("close").shift(-horizon) / pl.col("close") - 1).alias("ret")
-        )
+        close.with_columns((pl.col("close").shift(-horizon) / pl.col("close") - 1).alias("ret"))
         .head(len(close) - horizon)
         .with_columns(
             pl.when(pl.col("ret") > threshold)
@@ -219,12 +219,14 @@ def apply_pt_sl_on_t1(
         sl_out.append(sl_time)
         pt_out.append(pt_time)
 
-    return pl.DataFrame({
-        "timestamp": events_df["timestamp"],
-        "t1_barrier": pl.Series(t1_barrier_out, dtype=pl.Int64).cast(pl.Datetime("us")),
-        "sl": pl.Series(sl_out, dtype=pl.Int64).cast(pl.Datetime("us")),
-        "pt": pl.Series(pt_out, dtype=pl.Int64).cast(pl.Datetime("us")),
-    })
+    return pl.DataFrame(
+        {
+            "timestamp": events_df["timestamp"],
+            "t1_barrier": pl.Series(t1_barrier_out, dtype=pl.Int64).cast(pl.Datetime("us")),
+            "sl": pl.Series(sl_out, dtype=pl.Int64).cast(pl.Datetime("us")),
+            "pt": pl.Series(pt_out, dtype=pl.Int64).cast(pl.Datetime("us")),
+        }
+    )
 
 
 def get_events(
@@ -270,9 +272,7 @@ def get_events(
         events = events.join(t1.rename({"t1": "t1_vert"}), on="timestamp", how="left")
         # Fill missing t1 with last bar
         last_ts = close["timestamp"][-1]
-        events = events.with_columns(
-            pl.col("t1_vert").fill_null(last_ts).alias("t1_vert")
-        )
+        events = events.with_columns(pl.col("t1_vert").fill_null(last_ts).alias("t1_vert"))
     else:
         last_ts = close["timestamp"][-1]
         events = events.with_columns(pl.lit(last_ts).alias("t1_vert"))
@@ -296,24 +296,28 @@ def get_events(
     )
 
     # Find earliest barrier touch: min of t1_barrier, sl, pt
-    barrier_results = barrier_results.with_columns([
-        pl.min_horizontal(
-            pl.col("t1_barrier"),
-            pl.col("sl").fill_null(pl.col("t1_barrier")),
-            pl.col("pt").fill_null(pl.col("t1_barrier")),
-        ).alias("t1_first")
-    ])
+    barrier_results = barrier_results.with_columns(
+        [
+            pl.min_horizontal(
+                pl.col("t1_barrier"),
+                pl.col("sl").fill_null(pl.col("t1_barrier")),
+                pl.col("pt").fill_null(pl.col("t1_barrier")),
+            ).alias("t1_first")
+        ]
+    )
 
     # Join back to events
     result = events.join(
         barrier_results.select(["timestamp", "t1_first"]),
         on="timestamp",
         how="left",
-    ).select([
-        "timestamp",
-        pl.col("t1_first").alias("t1"),
-        "trgt",
-    ])
+    ).select(
+        [
+            "timestamp",
+            pl.col("t1_first").alias("t1"),
+            "trgt",
+        ]
+    )
 
     return result
 
@@ -344,12 +348,8 @@ def get_bins(events: pl.DataFrame, close: pl.DataFrame) -> pl.DataFrame:
             on="t1",
             how="left",
         )
-        .with_columns(
-            (pl.col("close_t1") / pl.col("close_t0") - 1).alias("ret")
-        )
-        .with_columns(
-            pl.col("ret").sign().cast(pl.Int8).alias("label")
-        )
+        .with_columns((pl.col("close_t1") / pl.col("close_t0") - 1).alias("ret"))
+        .with_columns(pl.col("ret").sign().cast(pl.Int8).alias("label"))
         .select(["timestamp", "t1", "ret", "label"])
     )
     return result
@@ -488,26 +488,34 @@ def trend_scanning_labels(
                 best_t1 = ts_np[end_idx]
 
         if best_t1 is not None:
-            rows.append({
-                "timestamp": int(dt0_int),
-                "t1": int(best_t1),
-                "t_val": best_t_val,
-                "label": int(np.sign(best_t_val)),
-            })
+            rows.append(
+                {
+                    "timestamp": int(dt0_int),
+                    "t1": int(best_t1),
+                    "t_val": best_t_val,
+                    "label": int(np.sign(best_t_val)),
+                }
+            )
 
     if not rows:
-        return pl.DataFrame(schema={
-            "timestamp": pl.Datetime("us"),
-            "t1": pl.Datetime("us"),
-            "t_val": pl.Float64,
-            "label": pl.Int8,
-        })
+        return pl.DataFrame(
+            schema={
+                "timestamp": pl.Datetime("us"),
+                "t1": pl.Datetime("us"),
+                "t_val": pl.Float64,
+                "label": pl.Int8,
+            }
+        )
 
-    result = pl.DataFrame({
-        "timestamp": pl.Series([r["timestamp"] for r in rows], dtype=pl.Int64).cast(pl.Datetime("us")),
-        "t1": pl.Series([r["t1"] for r in rows], dtype=pl.Int64).cast(pl.Datetime("us")),
-        "t_val": [r["t_val"] for r in rows],
-        "label": pl.Series([r["label"] for r in rows], dtype=pl.Int8),
-    })
+    ts_series = pl.Series([r["timestamp"] for r in rows], dtype=pl.Int64)
+    t1_series = pl.Series([r["t1"] for r in rows], dtype=pl.Int64)
+    result = pl.DataFrame(
+        {
+            "timestamp": ts_series.cast(pl.Datetime("us")),
+            "t1": t1_series.cast(pl.Datetime("us")),
+            "t_val": [r["t_val"] for r in rows],
+            "label": pl.Series([r["label"] for r in rows], dtype=pl.Int8),
+        }
+    )
 
     return result

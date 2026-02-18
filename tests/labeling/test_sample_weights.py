@@ -39,15 +39,20 @@ class TestMpNumCoEvents:
             eager=True,
         )
         # Two non-overlapping events: [0, 10] and [20, 30]
-        events = pl.DataFrame({
-            "timestamp": [timestamps[0], timestamps[20]],
-            "t1": [timestamps[10], timestamps[30]],
-        })
+        events = pl.DataFrame(
+            {
+                "timestamp": [timestamps[0], timestamps[20]],
+                "t1": [timestamps[10], timestamps[30]],
+            }
+        )
         result = mp_num_co_events(close_idx=timestamps, t1=events)
         # Within each event window, co-event count should be 1
-        assert result.filter(
-            pl.col("timestamp").is_between(timestamps[0], timestamps[10])
-        )["num_co_events"].max() == 1
+        assert (
+            result.filter(pl.col("timestamp").is_between(timestamps[0], timestamps[10]))[
+                "num_co_events"
+            ].max()
+            == 1
+        )
 
 
 class TestMpSampleTw:
@@ -95,10 +100,12 @@ class TestGetIndMatrix:
             interval="1m",
             eager=True,
         )
-        events = pl.DataFrame({
-            "timestamp": [timestamps[0], timestamps[3]],
-            "t1": [timestamps[5], timestamps[8]],
-        })
+        events = pl.DataFrame(
+            {
+                "timestamp": [timestamps[0], timestamps[3]],
+                "t1": [timestamps[5], timestamps[8]],
+            }
+        )
         result = get_ind_matrix(bar_idx=timestamps, t1=events)
         assert isinstance(result, np.ndarray)
         assert result.shape == (10, 2)  # 10 bars x 2 events
@@ -112,10 +119,12 @@ class TestGetIndMatrix:
             interval="1m",
             eager=True,
         )
-        events = pl.DataFrame({
-            "timestamp": [timestamps[0]],
-            "t1": [timestamps[5]],
-        })
+        events = pl.DataFrame(
+            {
+                "timestamp": [timestamps[0]],
+                "t1": [timestamps[5]],
+            }
+        )
         result = get_ind_matrix(bar_idx=timestamps, t1=events)
         assert set(np.unique(result)).issubset({0.0, 1.0})
         # Bars 0-5 should be 1, bars 6-9 should be 0
@@ -164,9 +173,9 @@ class TestSeqBootstrap:
         np.random.seed(42)
         # 3 non-overlapping events + 1 overlapping with event 0
         ind_m = np.zeros((20, 4))
-        ind_m[0:5, 0] = 1.0    # event 0: bars 0-4
-        ind_m[0:5, 3] = 1.0    # event 3: overlaps event 0
-        ind_m[5:10, 1] = 1.0   # event 1: bars 5-9
+        ind_m[0:5, 0] = 1.0  # event 0: bars 0-4
+        ind_m[0:5, 3] = 1.0  # event 3: overlaps event 0
+        ind_m[5:10, 1] = 1.0  # event 1: bars 5-9
         ind_m[10:15, 2] = 1.0  # event 2: bars 10-14
 
         # Run many bootstraps and check event 3 is less frequent
@@ -184,9 +193,9 @@ class TestSeqBootstrap:
 class TestGetTimeDecay:
     def test_returns_polars_dataframe(self, close_prices, events_with_t1):
         from tradelab.lopezdp_utils.labeling.sample_weights import (
+            get_time_decay,
             mp_num_co_events,
             mp_sample_tw,
-            get_time_decay,
         )
 
         co_events = mp_num_co_events(close_prices["timestamp"], events_with_t1)
@@ -198,9 +207,9 @@ class TestGetTimeDecay:
     def test_no_decay_when_clf_last_w_one(self, close_prices, events_with_t1):
         """clf_last_w=1.0 means no decay — all weights should be 1.0."""
         from tradelab.lopezdp_utils.labeling.sample_weights import (
+            get_time_decay,
             mp_num_co_events,
             mp_sample_tw,
-            get_time_decay,
         )
 
         co_events = mp_num_co_events(close_prices["timestamp"], events_with_t1)
@@ -234,9 +243,11 @@ class TestValidateT1:
             interval="1m",
             eager=True,
         )
-        bad_events = pl.DataFrame({
-            "timestamp": [timestamps[0]],
-            "t1": [None],
-        }).cast({"t1": pl.Datetime})
-        with pytest.raises(ValueError, match="t1.*null"):
+        bad_events = pl.DataFrame(
+            {
+                "timestamp": [timestamps[0]],
+                "t1": [None],
+            }
+        ).cast({"t1": pl.Datetime})
+        with pytest.raises(ValueError, match=r"t1.*null"):
             mp_num_co_events(close_idx=timestamps, t1=bad_events)

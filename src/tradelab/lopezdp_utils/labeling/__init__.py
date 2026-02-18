@@ -39,26 +39,22 @@ from tradelab.lopezdp_utils.labeling.triple_barrier import (
 )
 
 __all__ = [
-    # Triple-barrier labeling
-    "daily_volatility",
     "add_vertical_barrier",
+    "daily_volatility",
+    "drop_labels",
     "fixed_time_horizon",
-    "get_events",
+    "get_avg_uniqueness",
     "get_bins",
-    "triple_barrier_labels",
-    "trend_scanning_labels",
-    # Meta-labeling
-    "get_events_meta",
     "get_bins_meta",
-    # Sample weights
+    "get_class_weights",
+    "get_events",
+    "get_events_meta",
+    "get_ind_matrix",
+    "get_time_decay",
     "mp_num_co_events",
     "mp_sample_tw",
-    "get_ind_matrix",
-    "get_avg_uniqueness",
-    "seq_bootstrap",
     "mp_sample_w",
-    "get_time_decay",
-    # Class balance
-    "drop_labels",
-    "get_class_weights",
+    "seq_bootstrap",
+    "trend_scanning_labels",
+    "triple_barrier_labels",
 ]

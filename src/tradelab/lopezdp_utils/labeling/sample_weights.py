@@ -76,10 +76,12 @@ def mp_num_co_events(
         hi = int(np.searchsorted(bar_ts_range, t_out, side="right"))
         count[lo:hi] += 1.0
 
-    return pl.DataFrame({
-        "timestamp": pl.Series(bar_ts_range, dtype=pl.Int64).cast(pl.Datetime("us")),
-        "num_co_events": count,
-    })
+    return pl.DataFrame(
+        {
+            "timestamp": pl.Series(bar_ts_range, dtype=pl.Int64).cast(pl.Datetime("us")),
+            "num_co_events": count,
+        }
+    )
 
 
 def mp_sample_tw(
@@ -125,10 +127,12 @@ def mp_sample_tw(
         else:
             uniqueness[i] = float(np.mean(1.0 / window_counts[window_counts > 0]))
 
-    return pl.DataFrame({
-        "timestamp": t1["timestamp"],
-        "uniqueness": uniqueness,
-    })
+    return pl.DataFrame(
+        {
+            "timestamp": t1["timestamp"],
+            "uniqueness": uniqueness,
+        }
+    )
 
 
 def get_ind_matrix(bar_idx: pl.Series, t1: pl.DataFrame) -> np.ndarray:
@@ -214,7 +218,7 @@ def seq_bootstrap(ind_m: np.ndarray, s_length: int | None = None) -> list:
 
         for i in range(n_events):
             # Compute uniqueness of candidate i given current selection
-            cols = phi + [i]
+            cols = [*phi, i]
             sub = ind_m[:, cols]
             avg_u[i] = get_avg_uniqueness(sub)[-1]
 
@@ -253,11 +257,8 @@ def mp_sample_w(
     _validate_t1(t1)
 
     # Compute log-returns
-    log_ret = (
-        close.with_columns(
-            pl.col("close").log(base=np.e).diff().alias("log_ret")
-        )
-        .select(["timestamp", "log_ret"])
+    log_ret = close.with_columns(pl.col("close").log(base=np.e).diff().alias("log_ret")).select(
+        ["timestamp", "log_ret"]
     )
 
     ret_ts = log_ret["timestamp"].cast(pl.Int64).to_numpy()
@@ -289,10 +290,12 @@ def mp_sample_w(
             safe_co = np.where(window_co[:n] > 0, window_co[:n], 1.0)
             weights[i] = abs((window_ret[:n] / safe_co).sum())
 
-    return pl.DataFrame({
-        "timestamp": t1["timestamp"],
-        "weight": weights,
-    })
+    return pl.DataFrame(
+        {
+            "timestamp": t1["timestamp"],
+            "weight": weights,
+        }
+    )
 
 
 def get_time_decay(
@@ -325,9 +328,7 @@ def get_time_decay(
     total = float(cum_u[-1])
 
     if total == 0:
-        return tw_sorted.with_columns(pl.lit(1.0).alias("weight")).select(
-            ["timestamp", "weight"]
-        )
+        return tw_sorted.with_columns(pl.lit(1.0).alias("weight")).select(["timestamp", "weight"])
 
     # Compute slope
     if clf_last_w >= 0:
@@ -339,6 +340,4 @@ def get_time_decay(
 
     weights = (const + slope * cum_u).clip(lower_bound=0.0)
 
-    return tw_sorted.with_columns(weights.alias("weight")).select(
-        ["timestamp", "weight"]
-    )
+    return tw_sorted.with_columns(weights.alias("weight")).select(["timestamp", "weight"])

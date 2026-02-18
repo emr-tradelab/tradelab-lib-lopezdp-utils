@@ -14,10 +14,9 @@ Reference: AFML Chapter 3, Section 3.6
 
 from __future__ import annotations
 
-import numpy as np
 import polars as pl
 
-from .triple_barrier import apply_pt_sl_on_t1, _validate_close, _validate_t1
+from .triple_barrier import _validate_close, _validate_t1, apply_pt_sl_on_t1
 
 
 def get_events_meta(
@@ -82,8 +81,6 @@ def get_events_meta(
         # Align side with filtered events
         side_df = pl.DataFrame({"timestamp": t_events, "side": side})
         events = events.join(side_df, on="timestamp", how="left")
-        side_col = pl.col("side")
-
     if side is None:
         events = events.with_columns(pl.lit(1.0).alias("side"))
 
@@ -159,16 +156,12 @@ def get_bins_meta(events: pl.DataFrame, close: pl.DataFrame) -> pl.DataFrame:
             on="t1",
             how="left",
         )
-        .with_columns(
-            (pl.col("close_t1") / pl.col("close_t0") - 1).alias("ret")
-        )
+        .with_columns((pl.col("close_t1") / pl.col("close_t0") - 1).alias("ret"))
     )
 
     if is_meta:
         # Multiply return by side to get PnL perspective
-        result = result.with_columns(
-            (pl.col("ret") * pl.col("side")).alias("ret")
-        )
+        result = result.with_columns((pl.col("ret") * pl.col("side")).alias("ret"))
         # Binary label: 1 if trade was profitable, 0 otherwise
         result = result.with_columns(
             pl.when(pl.col("ret") > 0)
@@ -178,8 +171,6 @@ def get_bins_meta(events: pl.DataFrame, close: pl.DataFrame) -> pl.DataFrame:
             .alias("label")
         )
     else:
-        result = result.with_columns(
-            pl.col("ret").sign().cast(pl.Int8).alias("label")
-        )
+        result = result.with_columns(pl.col("ret").sign().cast(pl.Int8).alias("label"))
 
     return result.select(["timestamp", "ret", "label"])

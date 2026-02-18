@@ -22,7 +22,6 @@ Reference: AFML Chapter 10, Snippet 10.4
 """
 
 
-
 def bet_size(w: float, x: float) -> float:
     """Width-regulated sigmoid function for position sizing.
 
@@ -86,9 +85,7 @@ def inv_price(f: float, w: float, m: float) -> float:
     return f - m * (w / (1 - m**2)) ** 0.5
 
 
-def limit_price(
-    t_pos: int, pos: int, f: float, w: float, max_pos: int
-) -> float:
+def limit_price(t_pos: int, pos: int, f: float, w: float, max_pos: int) -> float:
     """Calculate average limit price for multi-unit order.
 
     Computes the breakeven average price for filling from current position

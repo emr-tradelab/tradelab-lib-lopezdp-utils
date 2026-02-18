@@ -22,11 +22,7 @@ def _aggregate_bar(ticks: list[dict]) -> dict:
     prices = [t["price"] for t in ticks]
     volumes = [t["volume"] for t in ticks]
     total_volume = sum(volumes)
-    vwap = (
-        sum(t["price"] * t["volume"] for t in ticks) / total_volume
-        if total_volume > 0
-        else 0.0
-    )
+    vwap = sum(t["price"] * t["volume"] for t in ticks) / total_volume if total_volume > 0 else 0.0
 
     return {
         "timestamp": ticks[-1]["timestamp"],
@@ -79,17 +75,16 @@ def time_bars(df: pl.DataFrame, frequency: str) -> pl.DataFrame:
         df.sort("timestamp")
         .with_columns(pl.col("timestamp").set_sorted())
         .group_by_dynamic("timestamp", every=frequency)
-        .agg([
-            pl.col("price").first().alias("open"),
-            pl.col("price").max().alias("high"),
-            pl.col("price").min().alias("low"),
-            pl.col("price").last().alias("close"),
-            pl.col("volume").sum().alias("volume"),
-            (
-                (pl.col("price") * pl.col("volume")).sum()
-                / pl.col("volume").sum()
-            ).alias("vwap"),
-        ])
+        .agg(
+            [
+                pl.col("price").first().alias("open"),
+                pl.col("price").max().alias("high"),
+                pl.col("price").min().alias("low"),
+                pl.col("price").last().alias("close"),
+                pl.col("volume").sum().alias("volume"),
+                ((pl.col("price") * pl.col("volume")).sum() / pl.col("volume").sum()).alias("vwap"),
+            ]
+        )
         .filter(pl.col("volume") > 0)
         .sort("timestamp")
     )
@@ -127,15 +122,21 @@ def tick_bars(df: pl.DataFrame, threshold: int) -> pl.DataFrame:
             current = []
             count = 0
 
-    return pl.DataFrame(bars) if bars else pl.DataFrame(schema={
-        "timestamp": pl.Datetime,
-        "open": pl.Float64,
-        "high": pl.Float64,
-        "low": pl.Float64,
-        "close": pl.Float64,
-        "volume": pl.Float64,
-        "vwap": pl.Float64,
-    })
+    return (
+        pl.DataFrame(bars)
+        if bars
+        else pl.DataFrame(
+            schema={
+                "timestamp": pl.Datetime,
+                "open": pl.Float64,
+                "high": pl.Float64,
+                "low": pl.Float64,
+                "close": pl.Float64,
+                "volume": pl.Float64,
+                "vwap": pl.Float64,
+            }
+        )
+    )
 
 
 def volume_bars(df: pl.DataFrame, threshold: float) -> pl.DataFrame:
@@ -168,15 +169,21 @@ def volume_bars(df: pl.DataFrame, threshold: float) -> pl.DataFrame:
             current = []
             cum_vol = 0.0
 
-    return pl.DataFrame(bars) if bars else pl.DataFrame(schema={
-        "timestamp": pl.Datetime,
-        "open": pl.Float64,
-        "high": pl.Float64,
-        "low": pl.Float64,
-        "close": pl.Float64,
-        "volume": pl.Float64,
-        "vwap": pl.Float64,
-    })
+    return (
+        pl.DataFrame(bars)
+        if bars
+        else pl.DataFrame(
+            schema={
+                "timestamp": pl.Datetime,
+                "open": pl.Float64,
+                "high": pl.Float64,
+                "low": pl.Float64,
+                "close": pl.Float64,
+                "volume": pl.Float64,
+                "vwap": pl.Float64,
+            }
+        )
+    )
 
 
 def dollar_bars(df: pl.DataFrame, threshold: float) -> pl.DataFrame:
@@ -209,15 +216,21 @@ def dollar_bars(df: pl.DataFrame, threshold: float) -> pl.DataFrame:
             current = []
             cum_dollar = 0.0
 
-    return pl.DataFrame(bars) if bars else pl.DataFrame(schema={
-        "timestamp": pl.Datetime,
-        "open": pl.Float64,
-        "high": pl.Float64,
-        "low": pl.Float64,
-        "close": pl.Float64,
-        "volume": pl.Float64,
-        "vwap": pl.Float64,
-    })
+    return (
+        pl.DataFrame(bars)
+        if bars
+        else pl.DataFrame(
+            schema={
+                "timestamp": pl.Datetime,
+                "open": pl.Float64,
+                "high": pl.Float64,
+                "low": pl.Float64,
+                "close": pl.Float64,
+                "volume": pl.Float64,
+                "vwap": pl.Float64,
+            }
+        )
+    )
 
 
 def tick_imbalance_bars(
@@ -265,24 +278,26 @@ def tick_imbalance_bars(
             if bar:
                 bars.append(bar)
             # Update EWMAs incrementally
-            ewma_expected_ticks = (
-                alpha * len(current) + (1 - alpha) * ewma_expected_ticks
-            )
-            ewma_tick_imbalance = (
-                alpha * tick_imbalance + (1 - alpha) * ewma_tick_imbalance
-            )
+            ewma_expected_ticks = alpha * len(current) + (1 - alpha) * ewma_expected_ticks
+            ewma_tick_imbalance = alpha * tick_imbalance + (1 - alpha) * ewma_tick_imbalance
             current = []
             tick_imbalance = 0.0
 
-    return pl.DataFrame(bars) if bars else pl.DataFrame(schema={
-        "timestamp": pl.Datetime,
-        "open": pl.Float64,
-        "high": pl.Float64,
-        "low": pl.Float64,
-        "close": pl.Float64,
-        "volume": pl.Float64,
-        "vwap": pl.Float64,
-    })
+    return (
+        pl.DataFrame(bars)
+        if bars
+        else pl.DataFrame(
+            schema={
+                "timestamp": pl.Datetime,
+                "open": pl.Float64,
+                "high": pl.Float64,
+                "low": pl.Float64,
+                "close": pl.Float64,
+                "volume": pl.Float64,
+                "vwap": pl.Float64,
+            }
+        )
+    )
 
 
 def volume_imbalance_bars(
@@ -325,24 +340,26 @@ def volume_imbalance_bars(
             bar = _aggregate_bar(current)
             if bar:
                 bars.append(bar)
-            ewma_expected_ticks = (
-                alpha * len(current) + (1 - alpha) * ewma_expected_ticks
-            )
-            ewma_vol_imbalance = (
-                alpha * vol_imbalance + (1 - alpha) * ewma_vol_imbalance
-            )
+            ewma_expected_ticks = alpha * len(current) + (1 - alpha) * ewma_expected_ticks
+            ewma_vol_imbalance = alpha * vol_imbalance + (1 - alpha) * ewma_vol_imbalance
             current = []
             vol_imbalance = 0.0
 
-    return pl.DataFrame(bars) if bars else pl.DataFrame(schema={
-        "timestamp": pl.Datetime,
-        "open": pl.Float64,
-        "high": pl.Float64,
-        "low": pl.Float64,
-        "close": pl.Float64,
-        "volume": pl.Float64,
-        "vwap": pl.Float64,
-    })
+    return (
+        pl.DataFrame(bars)
+        if bars
+        else pl.DataFrame(
+            schema={
+                "timestamp": pl.Datetime,
+                "open": pl.Float64,
+                "high": pl.Float64,
+                "low": pl.Float64,
+                "close": pl.Float64,
+                "volume": pl.Float64,
+                "vwap": pl.Float64,
+            }
+        )
+    )
 
 
 def dollar_imbalance_bars(
@@ -385,24 +402,26 @@ def dollar_imbalance_bars(
             bar = _aggregate_bar(current)
             if bar:
                 bars.append(bar)
-            ewma_expected_ticks = (
-                alpha * len(current) + (1 - alpha) * ewma_expected_ticks
-            )
-            ewma_dollar_imbalance = (
-                alpha * dollar_imbalance + (1 - alpha) * ewma_dollar_imbalance
-            )
+            ewma_expected_ticks = alpha * len(current) + (1 - alpha) * ewma_expected_ticks
+            ewma_dollar_imbalance = alpha * dollar_imbalance + (1 - alpha) * ewma_dollar_imbalance
             current = []
             dollar_imbalance = 0.0
 
-    return pl.DataFrame(bars) if bars else pl.DataFrame(schema={
-        "timestamp": pl.Datetime,
-        "open": pl.Float64,
-        "high": pl.Float64,
-        "low": pl.Float64,
-        "close": pl.Float64,
-        "volume": pl.Float64,
-        "vwap": pl.Float64,
-    })
+    return (
+        pl.DataFrame(bars)
+        if bars
+        else pl.DataFrame(
+            schema={
+                "timestamp": pl.Datetime,
+                "open": pl.Float64,
+                "high": pl.Float64,
+                "low": pl.Float64,
+                "close": pl.Float64,
+                "volume": pl.Float64,
+                "vwap": pl.Float64,
+            }
+        )
+    )
 
 
 def tick_runs_bars(
@@ -449,24 +468,26 @@ def tick_runs_bars(
             bar = _aggregate_bar(current)
             if bar:
                 bars.append(bar)
-            ewma_expected_ticks = (
-                alpha * n + (1 - alpha) * ewma_expected_ticks
-            )
-            ewma_buy_prob = (
-                alpha * buy_prob + (1 - alpha) * ewma_buy_prob
-            )
+            ewma_expected_ticks = alpha * n + (1 - alpha) * ewma_expected_ticks
+            ewma_buy_prob = alpha * buy_prob + (1 - alpha) * ewma_buy_prob
             current = []
             n_buy = 0
 
-    return pl.DataFrame(bars) if bars else pl.DataFrame(schema={
-        "timestamp": pl.Datetime,
-        "open": pl.Float64,
-        "high": pl.Float64,
-        "low": pl.Float64,
-        "close": pl.Float64,
-        "volume": pl.Float64,
-        "vwap": pl.Float64,
-    })
+    return (
+        pl.DataFrame(bars)
+        if bars
+        else pl.DataFrame(
+            schema={
+                "timestamp": pl.Datetime,
+                "open": pl.Float64,
+                "high": pl.Float64,
+                "low": pl.Float64,
+                "close": pl.Float64,
+                "volume": pl.Float64,
+                "vwap": pl.Float64,
+            }
+        )
+    )
 
 
 def volume_runs_bars(
@@ -519,29 +540,30 @@ def volume_runs_bars(
             bar = _aggregate_bar(current)
             if bar:
                 bars.append(bar)
-            ewma_expected_ticks = (
-                alpha * n + (1 - alpha) * ewma_expected_ticks
-            )
+            ewma_expected_ticks = alpha * n + (1 - alpha) * ewma_expected_ticks
             ewma_vol_per_tick = (
-                alpha * (total_volume / n if n > 0 else 0)
-                + (1 - alpha) * ewma_vol_per_tick
+                alpha * (total_volume / n if n > 0 else 0) + (1 - alpha) * ewma_vol_per_tick
             )
-            ewma_buy_vol = (
-                alpha * buy_volume + (1 - alpha) * ewma_buy_vol
-            )
+            ewma_buy_vol = alpha * buy_volume + (1 - alpha) * ewma_buy_vol
             current = []
             buy_volume = 0.0
             total_volume = 0.0
 
-    return pl.DataFrame(bars) if bars else pl.DataFrame(schema={
-        "timestamp": pl.Datetime,
-        "open": pl.Float64,
-        "high": pl.Float64,
-        "low": pl.Float64,
-        "close": pl.Float64,
-        "volume": pl.Float64,
-        "vwap": pl.Float64,
-    })
+    return (
+        pl.DataFrame(bars)
+        if bars
+        else pl.DataFrame(
+            schema={
+                "timestamp": pl.Datetime,
+                "open": pl.Float64,
+                "high": pl.Float64,
+                "low": pl.Float64,
+                "close": pl.Float64,
+                "volume": pl.Float64,
+                "vwap": pl.Float64,
+            }
+        )
+    )
 
 
 def dollar_runs_bars(
@@ -591,23 +613,26 @@ def dollar_runs_bars(
             bar = _aggregate_bar(current)
             if bar:
                 bars.append(bar)
-            ewma_expected_ticks = (
-                alpha * n + (1 - alpha) * ewma_expected_ticks
-            )
+            ewma_expected_ticks = alpha * n + (1 - alpha) * ewma_expected_ticks
             ewma_dollar_per_tick = (
-                alpha * (total_dollars / n if n > 0 else 0)
-                + (1 - alpha) * ewma_dollar_per_tick
+                alpha * (total_dollars / n if n > 0 else 0) + (1 - alpha) * ewma_dollar_per_tick
             )
             current = []
             buy_dollars = 0.0
             total_dollars = 0.0
 
-    return pl.DataFrame(bars) if bars else pl.DataFrame(schema={
-        "timestamp": pl.Datetime,
-        "open": pl.Float64,
-        "high": pl.Float64,
-        "low": pl.Float64,
-        "close": pl.Float64,
-        "volume": pl.Float64,
-        "vwap": pl.Float64,
-    })
+    return (
+        pl.DataFrame(bars)
+        if bars
+        else pl.DataFrame(
+            schema={
+                "timestamp": pl.Datetime,
+                "open": pl.Float64,
+                "high": pl.Float64,
+                "low": pl.Float64,
+                "close": pl.Float64,
+                "volume": pl.Float64,
+                "vwap": pl.Float64,
+            }
+        )
+    )

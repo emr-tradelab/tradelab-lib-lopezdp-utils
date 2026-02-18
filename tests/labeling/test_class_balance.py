@@ -2,17 +2,18 @@
 
 import numpy as np
 import polars as pl
-import pytest
 
 
 class TestDropLabels:
     def test_drops_rare_class(self):
         from tradelab.lopezdp_utils.labeling.class_balance import drop_labels
 
-        events = pl.DataFrame({
-            "label": [1] * 90 + [0] * 5 + [-1] * 5,
-            "ret": np.random.randn(100),
-        })
+        events = pl.DataFrame(
+            {
+                "label": [1] * 90 + [0] * 5 + [-1] * 5,
+                "ret": np.random.randn(100),
+            }
+        )
         result = drop_labels(events, min_pct=0.08)
         # Classes with < 8% should be dropped
         remaining = result["label"].unique().to_list()
@@ -24,9 +25,11 @@ class TestDropLabels:
     def test_keeps_all_when_above_threshold(self):
         from tradelab.lopezdp_utils.labeling.class_balance import drop_labels
 
-        events = pl.DataFrame({
-            "label": [1] * 40 + [0] * 30 + [-1] * 30,
-        })
+        events = pl.DataFrame(
+            {
+                "label": [1] * 40 + [0] * 30 + [-1] * 30,
+            }
+        )
         result = drop_labels(events, min_pct=0.05)
         assert len(result["label"].unique()) == 3
 

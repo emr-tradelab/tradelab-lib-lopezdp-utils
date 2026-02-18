@@ -35,9 +35,7 @@ def correl_dist(corr: pd.DataFrame) -> pd.DataFrame:
     return dist
 
 
-def tree_clustering(
-    corr: pd.DataFrame, method: str = "single"
-) -> np.ndarray:
+def tree_clustering(corr: pd.DataFrame, method: str = "single") -> np.ndarray:
     """Hierarchical tree clustering on correlation distance matrix.
 
     Computes the linkage matrix from a correlation-based distance metric

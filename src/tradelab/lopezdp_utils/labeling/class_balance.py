@@ -28,8 +28,10 @@ def drop_labels(events: pl.DataFrame, min_pct: float = 0.05) -> pl.DataFrame:
     """
     while True:
         # Compute value counts (normalized)
-        vc = events["label"].value_counts(sort=True).with_columns(
-            (pl.col("count") / pl.col("count").sum()).alias("pct")
+        vc = (
+            events["label"]
+            .value_counts(sort=True)
+            .with_columns((pl.col("count") / pl.col("count").sum()).alias("pct"))
         )
 
         min_pct_val = float(vc["pct"].min())

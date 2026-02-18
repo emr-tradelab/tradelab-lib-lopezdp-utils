@@ -2,7 +2,6 @@
 
 import numpy as np
 import polars as pl
-import pytest
 
 
 class TestGetEventsMeta:
@@ -73,7 +72,7 @@ class TestGetBinsMeta:
         assert "label" in result.columns
         # Meta-labels are binary: 0 (don't act) or 1 (act)
         labels = result["label"].unique().sort().to_list()
-        assert all(l in [0, 1] for l in labels)
+        assert all(lbl in [0, 1] for lbl in labels)
 
     def test_standard_mode_returns_directional_labels(self, close_prices):
         """Without side column, labels should be -1 or 1."""
@@ -96,4 +95,4 @@ class TestGetBinsMeta:
         )
         result = get_bins_meta(events, close_prices)
         labels = result["label"].unique().sort().to_list()
-        assert all(l in [-1, 0, 1] for l in labels)
+        assert all(lbl in [-1, 0, 1] for lbl in labels)

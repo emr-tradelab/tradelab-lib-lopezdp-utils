@@ -96,9 +96,7 @@ def hrp_mc(
         # generate data
         x = np.random.normal(0, 0.01, size=(n_obs, size0))
         cols = [random.randint(0, size0 - 1) for _ in range(size1)]
-        y = x[:, cols] + np.random.normal(
-            0, 0.01 * sigma1, size=(n_obs, len(cols))
-        )
+        y = x[:, cols] + np.random.normal(0, 0.01 * sigma1, size=(n_obs, len(cols)))
         x = np.append(x, y, axis=1)
 
         r = {name: pd.Series(dtype=float) for name in method_names}

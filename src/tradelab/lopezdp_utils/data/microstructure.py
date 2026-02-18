@@ -341,8 +341,12 @@ def volume_bucket(
                 bucket_sell = 0.0
 
     if not buckets:
-        return pl.DataFrame({"buy_volume": pl.Series([], dtype=pl.Float64),
-                             "sell_volume": pl.Series([], dtype=pl.Float64)})
+        return pl.DataFrame(
+            {
+                "buy_volume": pl.Series([], dtype=pl.Float64),
+                "sell_volume": pl.Series([], dtype=pl.Float64),
+            }
+        )
     return pl.DataFrame(buckets)
 
 

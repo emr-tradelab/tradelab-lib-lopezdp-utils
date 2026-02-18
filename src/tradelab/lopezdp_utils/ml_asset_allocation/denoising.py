@@ -42,9 +42,7 @@ def mp_pdf(var: float, q: float, pts: int = 1000) -> pd.Series:
     return pdf
 
 
-def _fit_kde(
-    obs: np.ndarray, bwidth: float, x: np.ndarray | None = None
-) -> pd.Series:
+def _fit_kde(obs: np.ndarray, bwidth: float, x: np.ndarray | None = None) -> pd.Series:
     """Fit Kernel Density Estimator to observations.
 
     Args:
@@ -115,9 +113,7 @@ def _corr2cov(corr: np.ndarray, std: np.ndarray) -> np.ndarray:
     return cov
 
 
-def _err_pdfs(
-    var: float, e_val: np.ndarray, q: float, bwidth: float, pts: int = 1000
-) -> float:
+def _err_pdfs(var: float, e_val: np.ndarray, q: float, bwidth: float, pts: int = 1000) -> float:
     """Compute fitting error between theoretical MP and empirical PDFs.
 
     Args:
@@ -139,9 +135,7 @@ def _err_pdfs(
     return sse
 
 
-def find_max_eval(
-    e_val: np.ndarray, q: float, bwidth: float
-) -> tuple[float, float]:
+def find_max_eval(e_val: np.ndarray, q: float, bwidth: float) -> tuple[float, float]:
     """Find maximum random eigenvalue by fitting Marcenko-Pastur distribution.
 
     Optimizes the variance parameter to best fit the empirical eigenvalue
@@ -172,9 +166,7 @@ def find_max_eval(
     return e_max, var
 
 
-def denoised_corr(
-    e_val: np.ndarray, e_vec: np.ndarray, n_facts: int
-) -> np.ndarray:
+def denoised_corr(e_val: np.ndarray, e_vec: np.ndarray, n_facts: int) -> np.ndarray:
     """Denoise correlation matrix using constant residual eigenvalue method.
 
     Replaces noise eigenvalues (those below λ+) with their average,

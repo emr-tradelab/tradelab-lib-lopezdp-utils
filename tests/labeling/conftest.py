@@ -24,7 +24,6 @@ def close_prices() -> pl.DataFrame:
 def close_with_trend() -> pl.DataFrame:
     """Price series with a clear uptrend then downtrend for labeling tests."""
     np.random.seed(42)
-    n = 200
     timestamps = pl.datetime_range(
         pl.datetime(2024, 1, 1),
         pl.datetime(2024, 1, 1, 3, 19),
@@ -52,8 +51,10 @@ def events_with_t1(close_prices) -> pl.DataFrame:
     t1 = timestamps.gather(t1_indices)
     labels = np.random.choice([-1, 0, 1], size=50)
 
-    return pl.DataFrame({
-        "timestamp": t0,
-        "t1": t1,
-        "label": labels,
-    })
+    return pl.DataFrame(
+        {
+            "timestamp": t0,
+            "t1": t1,
+            "label": labels,
+        }
+    )

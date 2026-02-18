@@ -96,23 +96,26 @@ def roll_and_rebase(
     """
     gaps = roll_gaps(df, instrument_col=instrument_col, open_col=open_col, close_col=close_col)
 
-    rolled = df.with_columns([
-        (pl.col(open_col) - gaps).alias("rolled_open"),
-        (pl.col(close_col) - gaps).alias("rolled_close"),
-    ])
+    rolled = df.with_columns(
+        [
+            (pl.col(open_col) - gaps).alias("rolled_open"),
+            (pl.col(close_col) - gaps).alias("rolled_close"),
+        ]
+    )
 
     # Returns: diff of rolled_close / raw_close.shift(1)
-    rolled = rolled.with_columns([
-        (
-            pl.col("rolled_close").diff()
-            / pl.col(close_col).shift(1)
-        ).alias("returns"),
-    ])
+    rolled = rolled.with_columns(
+        [
+            (pl.col("rolled_close").diff() / pl.col(close_col).shift(1)).alias("returns"),
+        ]
+    )
 
     # Cumulative product: (1 + returns).cumprod()
-    rolled = rolled.with_columns([
-        (1 + pl.col("returns")).cum_prod().alias("r_prices"),
-    ])
+    rolled = rolled.with_columns(
+        [
+            (1 + pl.col("returns")).cum_prod().alias("r_prices"),
+        ]
+    )
 
     return rolled
 
