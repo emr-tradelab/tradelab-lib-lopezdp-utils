@@ -1,9 +1,6 @@
 ---
 name: notebooklm-researcher
-description: >
-  Queries NotebookLM for López de Prado financial ML theory. Use proactively before implementing
-  any concept from AFML or ML for Asset Managers. Examples: "what does chapter 3 cover",
-  "get the triple-barrier method implementation", "check if ML for Asset Managers has complementary content".
+description: Queries NotebookLM for López de Prado financial ML theory. Use proactively before implementing any concept from AFML or ML for Asset Managers. Examples: "what does chapter 3 cover", "get the triple-barrier method implementation", "check if ML for Asset Managers has complementary content".
 model: haiku
 tools: mcp__notebooklm__ask_question, mcp__notebooklm__list_sessions
 skills: notebooklm-research

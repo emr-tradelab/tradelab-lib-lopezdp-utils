@@ -1,9 +1,6 @@
 ---
 name: notebooklm-research
-description: >
-  Querying NotebookLM for López de Prado financial ML theory from AFML and ML for Asset Managers.
-  Use when implementing any concept from these books, starting a new chapter extraction,
-  or needing algorithm details, code snippets, or theoretical context from the books.
+description: Querying NotebookLM for López de Prado financial ML theory from AFML and ML for Asset Managers. Use when implementing any concept from these books, starting a new chapter extraction, or needing algorithm details, code snippets, or theoretical context from the books.
 ---
 
 # NotebookLM Research for López de Prado

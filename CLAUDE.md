@@ -24,6 +24,7 @@ See `WORKFLOW.md` for the full methodology. Phase 1 TODO is archived at `docs/ph
 - **NEVER** rely on your own training knowledge for financial ML theory from these books.
 - **ALWAYS** delegate to the `notebooklm-researcher` agent before implementing any concept.
 - You may use your own knowledge only for general Python/software engineering concerns.
+- **NotebookLM URL:** `https://notebooklm.google.com/notebook/334b6110-699f-4e34-acfc-05e138b65062`
 
 ### 2. Follow the extraction workflow
 
