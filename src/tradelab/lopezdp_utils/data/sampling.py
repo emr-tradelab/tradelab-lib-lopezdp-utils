@@ -8,11 +8,12 @@ import polars as pl
 
 
 def get_t_events(df: pl.DataFrame, threshold: float) -> pl.Series:
-    """Apply CUSUM filter for event-based sampling of time series.
+    """López de Prado's CUSUM filter for event-based sampling of time series.
 
-    The CUSUM filter detects shifts in the mean of a measured quantity. Unlike
-    Bollinger Bands, the filter requires a full run of magnitude `threshold` for
-    a new event to be triggered, filtering out significant noise.
+    This is the symmetric CUSUM filter from AFML Snippet 2.4. It detects shifts
+    in the mean of a measured quantity. Unlike Bollinger Bands, the filter
+    requires a full cumulative run of magnitude ``threshold`` for a new event to
+    be triggered, filtering out significant noise.
 
     Args:
         df: DataFrame with ``timestamp`` (Datetime) and ``close`` (Float64) columns.

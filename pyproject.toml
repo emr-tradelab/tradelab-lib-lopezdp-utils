@@ -38,6 +38,7 @@ module-name = "tradelab.lopezdp_utils"
 
 [dependency-groups]
 dev = [
+    "mypy>=1.19.1",
     "pre-commit>=4.3.0", # uv run pre-commit install
     "pytest>=8.4.2",
     "ruff>=0.13.1",
