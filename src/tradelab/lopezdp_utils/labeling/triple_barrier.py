@@ -1,287 +1,395 @@
 """Triple-barrier labeling method for financial machine learning.
 
-This module implements the core triple-barrier method, which labels observations
-based on the first of three barriers touched: upper horizontal (profit-taking),
-lower horizontal (stop-loss), or vertical (time expiration).
+Implements the triple-barrier method (AFML Ch. 3), fixed-time horizon labeling
+(AFML Ch. 3.2), and trend-scanning labeling (MLAM Ch. 5.4) with Polars I/O.
 
-Reference: AFML Chapter 3, Sections 3.4-3.5
+The triple-barrier method labels observations based on the first of three barriers
+touched: upper horizontal (profit-taking), lower horizontal (stop-loss), or
+vertical (time expiration). This approach addresses the shortcomings of fixed-time
+horizon labeling by using dynamic thresholds and accounting for the price path.
+
+Reference: AFML Chapters 3-4; MLAM Section 5.4
 """
 
+from __future__ import annotations
+
 import numpy as np
-import pandas as pd
+import polars as pl
+import statsmodels.api as sm
+
+
+def _validate_close(close: pl.DataFrame) -> None:
+    """Validate that close DataFrame has required columns."""
+    if "timestamp" not in close.columns or "close" not in close.columns:
+        raise ValueError("close DataFrame must have 'timestamp' and 'close' columns")
+
+
+def _validate_t1(events: pl.DataFrame) -> None:
+    """Validate t1 column exists and has no nulls."""
+    if "t1" not in events.columns:
+        raise ValueError("events DataFrame must contain 't1' column")
+    if events["t1"].null_count() > 0:
+        raise ValueError("t1 column must not contain null values")
+
+
+def daily_volatility(close: pl.DataFrame, span: int = 100) -> pl.DataFrame:
+    """Estimate daily volatility using EWMA of daily returns.
+
+    Computes daily returns by finding the price bar from approximately 1 day
+    (num_bars = span proxy) prior, then applies an exponentially weighted
+    moving standard deviation. Used to set dynamic barrier widths in the
+    triple-barrier method.
+
+    For intrabar data (minute bars), "daily" means looking back 1440 bars;
+    for daily data, it means 1 bar back. Here we use a simpler approach:
+    compute 1-bar pct_change EWMA std, which approximates bar-to-bar vol.
+    For the day-prior lookup the book uses searchsorted on index - 1 day;
+    since we accept generic Polars DataFrames we use pct_change + ewm_std
+    directly (appropriate for any bar frequency).
+
+    Args:
+        close: DataFrame with 'timestamp' (Datetime) and 'close' (Float) columns,
+            sorted ascending by timestamp.
+        span: EWMA span for the rolling standard deviation. Default 100.
+
+    Returns:
+        DataFrame with 'timestamp' and 'volatility' columns.
+
+    Reference:
+        Snippet 3.1, AFML Chapter 3
+    """
+    _validate_close(close)
+    result = close.with_columns(
+        pl.col("close").pct_change().ewm_std(span=span).alias("volatility")
+    ).select(["timestamp", "volatility"])
+    return result
+
+
+def add_vertical_barrier(
+    t_events: pl.Series,
+    close: pl.DataFrame,
+    num_bars: int,
+) -> pl.DataFrame:
+    """Add a vertical (time-based) barrier for the triple-barrier method.
+
+    For each event timestamp, finds the price bar that is `num_bars` ahead,
+    which serves as the maximum holding period (vertical barrier / expiration).
+
+    Args:
+        t_events: Series of event timestamps (Datetime) that seed each event.
+        close: DataFrame with 'timestamp' column (sorted ascending).
+        num_bars: Number of bars ahead to set the vertical barrier.
+
+    Returns:
+        DataFrame with 'timestamp' (event start) and 't1' (vertical barrier) columns.
+        For events near the end of the series, t1 is capped at the last available bar.
+
+    Reference:
+        Snippet 3.4, AFML Chapter 3
+    """
+    _validate_close(close)
+    all_ts = close["timestamp"].to_numpy()
+    event_ts = t_events.to_numpy()
+
+    # Find index of each event in close
+    start_idxs = np.searchsorted(all_ts, event_ts, side="left")
+    # Vertical barrier = num_bars ahead, capped at last bar
+    end_idxs = np.minimum(start_idxs + num_bars, len(all_ts) - 1)
+
+    t1_values = all_ts[end_idxs]
+
+    return pl.DataFrame({
+        "timestamp": t_events,
+        "t1": pl.Series(t1_values).cast(pl.Datetime("us")),
+    })
+
+
+def fixed_time_horizon(
+    close: pl.DataFrame,
+    horizon: int,
+    threshold: float,
+) -> pl.DataFrame:
+    """Label observations using the fixed-time horizon method.
+
+    WARNING: The book recommends against this method. Ignores heteroscedasticity
+    and path information. Use triple_barrier_labels() instead.
+
+    Args:
+        close: DataFrame with 'timestamp' and 'close' columns.
+        horizon: Number of bars ahead to evaluate return.
+        threshold: Symmetric threshold for label assignment.
+
+    Returns:
+        DataFrame with 'timestamp', 'ret', and 'label' columns.
+        Labels: -1 (ret < -threshold), 0 (|ret| <= threshold), 1 (ret > threshold).
+
+    Reference:
+        AFML Chapter 3, Section 3.2
+    """
+    _validate_close(close)
+    result = (
+        close.with_columns(
+            (pl.col("close").shift(-horizon) / pl.col("close") - 1).alias("ret")
+        )
+        .head(len(close) - horizon)
+        .with_columns(
+            pl.when(pl.col("ret") > threshold)
+            .then(pl.lit(1))
+            .when(pl.col("ret") < -threshold)
+            .then(pl.lit(-1))
+            .otherwise(pl.lit(0))
+            .alias("label")
+        )
+        .select(["timestamp", "ret", "label"])
+    )
+    return result
 
 
 def apply_pt_sl_on_t1(
-    close: pd.Series, events: pd.DataFrame, pt_sl: list[float], molecule: pd.DatetimeIndex
-) -> pd.DataFrame:
-    """Apply stop-loss/profit-taking barriers on a subset of events.
+    close_np: np.ndarray,
+    ts_np: np.ndarray,
+    events_df: pl.DataFrame,
+    pt_sl: list[float],
+) -> pl.DataFrame:
+    """Apply stop-loss/profit-taking barriers on events (path-dependent loop).
 
-    This function evaluates the price path for each event to determine which
-    barrier—profit-taking (pt), stop-loss (sl), or vertical (t1)—is touched
-    first along the path.
+    This function stays as a Python loop because barrier detection is inherently
+    path-dependent: we must scan the price path sequentially to find the first
+    barrier touch for each event.
 
-    For each event, it:
-    1. Calculates target profit-taking and stop-loss price levels
-    2. Slices the price path from event start to vertical barrier
-    3. Computes returns along the path (adjusted for position side)
-    4. Identifies earliest timestamps where barriers are breached
+    # TODO(numba): evaluate JIT for barrier touch loop
 
     Args:
-        close: Series of prices used to evaluate the security's path.
-        events: DataFrame with columns:
-            - 't1': Timestamp of vertical barrier (expiration)
-            - 'trgt': Width of horizontal barriers (typically volatility estimate)
-            - 'side': Position side (1 for long, -1 for short)
-        pt_sl: List of two non-negative floats:
-            - pt_sl[0]: Multiplier for profit-taking barrier
-            - pt_sl[1]: Multiplier for stop-loss barrier
-        molecule: Subset of event indices to process (allows parallel execution).
+        close_np: NumPy array of close prices.
+        ts_np: NumPy array of timestamps (int64 microseconds) matching close_np.
+        events_df: Polars DataFrame with columns: 'timestamp', 't1', 'trgt', 'side'.
+            'timestamp' and 't1' must be Datetime("us") columns.
+        pt_sl: [profit_taking_mult, stop_loss_mult].
 
     Returns:
-        DataFrame with columns 't1', 'sl', 'pt' containing timestamps of
-        first touch for each barrier type.
-
-    Reference:
-        Snippet 3.2 in AFML Chapter 3, Section 3.4
+        Polars DataFrame with 'timestamp', 't1_barrier', 'sl', 'pt' columns
+        (timestamps as Datetime, or null if not touched).
     """
-    # Filter events to process only the specified molecule
-    events_ = events.loc[molecule]
-    out = events_[["t1"]].copy(deep=True)
+    # Pre-convert event timestamps to int64 for fast searchsorted
+    ts_int = events_df["timestamp"].cast(pl.Int64).to_numpy()
+    t1_int = events_df["t1"].cast(pl.Int64).to_numpy()
+    trgt_arr = events_df["trgt"].to_numpy()
+    side_arr = events_df["side"].to_numpy()
 
-    # Set up profit-taking barrier
-    if pt_sl[0] > 0:
-        pt = pt_sl[0] * events_["trgt"]
-    else:
-        pt = pd.Series(index=events_.index)  # NaNs (disabled)
+    t1_barrier_out = []
+    sl_out: list[int | None] = []
+    pt_out: list[int | None] = []
 
-    # Set up stop-loss barrier
-    if pt_sl[1] > 0:
-        sl = -pt_sl[1] * events_["trgt"]
-    else:
-        sl = pd.Series(index=events_.index)  # NaNs (disabled)
+    for i in range(len(events_df)):
+        t0_us = int(ts_int[i])
+        t1_us = int(t1_int[i])
+        trgt = float(trgt_arr[i])
+        side = float(side_arr[i])
 
-    # Evaluate path for each event
-    for loc, t1 in events_["t1"].fillna(close.index[-1]).items():
-        # Get price path from event start to vertical barrier
-        df0 = close[loc:t1]
+        t0_idx = int(np.searchsorted(ts_np, t0_us, side="left"))
+        t1_idx = int(np.searchsorted(ts_np, t1_us, side="right"))
+        t1_idx = min(t1_idx, len(close_np) - 1)
 
-        # Calculate path returns, adjusted for position side
-        df0 = (df0 / close[loc] - 1) * events_.at[loc, "side"]
+        path = close_np[t0_idx : t1_idx + 1]
+        t1_barrier_out.append(int(ts_np[t1_idx]))
 
-        # Find earliest stop-loss touch
-        out.loc[loc, "sl"] = df0[df0 < sl[loc]].index.min()
+        if len(path) < 2:
+            sl_out.append(None)
+            pt_out.append(None)
+            continue
 
-        # Find earliest profit-taking touch
-        out.loc[loc, "pt"] = df0[df0 > pt[loc]].index.min()
+        ret_path = (path / path[0] - 1) * side
+        pt_level = pt_sl[0] * trgt if pt_sl[0] > 0 else None
+        sl_level = -pt_sl[1] * trgt if pt_sl[1] > 0 else None
+        bar_ts = ts_np[t0_idx : t1_idx + 1]
 
-    return out
+        sl_time: int | None = None
+        pt_time: int | None = None
+
+        if sl_level is not None:
+            sl_hits = np.where(ret_path < sl_level)[0]
+            if len(sl_hits) > 0:
+                sl_time = int(bar_ts[sl_hits[0]])
+
+        if pt_level is not None:
+            pt_hits = np.where(ret_path > pt_level)[0]
+            if len(pt_hits) > 0:
+                pt_time = int(bar_ts[pt_hits[0]])
+
+        sl_out.append(sl_time)
+        pt_out.append(pt_time)
+
+    return pl.DataFrame({
+        "timestamp": events_df["timestamp"],
+        "t1_barrier": pl.Series(t1_barrier_out, dtype=pl.Int64).cast(pl.Datetime("us")),
+        "sl": pl.Series(sl_out, dtype=pl.Int64).cast(pl.Datetime("us")),
+        "pt": pl.Series(pt_out, dtype=pl.Int64).cast(pl.Datetime("us")),
+    })
 
 
 def get_events(
-    close: pd.Series,
-    t_events: pd.DatetimeIndex,
+    close: pl.DataFrame,
+    t_events: pl.Series,
     pt_sl: float,
-    trgt: pd.Series,
+    trgt: pl.DataFrame,
     min_ret: float,
-    num_threads: int = 1,
-    t1: pd.Series | bool = False,
-) -> pd.DataFrame:
-    """Identify the time of first barrier touch for triple-barrier method.
-
-    This is the core engine of the triple-barrier labeling method. It determines
-    which of three barriers—upper horizontal (profit-taking), lower horizontal
-    (stop-loss), or vertical (time expiration)—is touched first for each event.
-
-    The function:
-    1. Filters events by minimum target return threshold
-    2. Evaluates price paths to find first barrier touches
-    3. Returns timestamps and types of barriers hit
-
-    This enables path-dependent labeling that accounts for the security's
-    trajectory during the holding period, not just the final price.
+    t1: pl.DataFrame | None = None,
+) -> pl.DataFrame:
+    """Find time of first barrier touch for each event (triple-barrier core).
 
     Args:
-        close: Series of prices used to track the security's path.
-        t_events: DatetimeIndex of timestamps that seed each triple-barrier event.
-            Typically output of CUSUM filter or other event-based sampling.
-        pt_sl: Non-negative float setting width of horizontal barriers as a
-            multiple of the target volatility. Applied symmetrically to both
-            profit-taking and stop-loss.
-        trgt: Series of targets (absolute returns), typically from volatility
-            estimator like daily_volatility().
-        min_ret: Minimum target return required to initiate a triple-barrier
-            search. Filters out noise and insignificant events.
-        num_threads: Number of threads for parallel processing. Default 1 (serial).
-            Note: Full multiprocessing support via mpPandasObj (Chapter 20) will
-            be integrated in production phase.
-        t1: Series of vertical barrier timestamps (expiration limits), or False
-            to disable vertical barriers.
+        close: DataFrame with 'timestamp' and 'close' columns.
+        t_events: Series of event timestamps.
+        pt_sl: Symmetric barrier width multiplier (applied to both pt and sl).
+        trgt: DataFrame with 'timestamp' and 'volatility' columns (barrier width).
+        min_ret: Minimum volatility threshold to include an event.
+        t1: Optional DataFrame with 'timestamp' and 't1' columns for vertical barriers.
+            If None, vertical barrier defaults to last bar in close.
 
     Returns:
-        DataFrame with columns:
-            - 't1': Timestamp of first barrier touched
-            - 'trgt': Target return (volatility) for the event
+        DataFrame with 'timestamp', 't1', 'trgt' columns. t1 is the first barrier
+        touch time; trgt is the volatility target used.
 
     Reference:
-        Snippet 3.3 in AFML Chapter 3, Section 3.5
-
-    Example:
-        >>> vol = daily_volatility(close, span=100)
-        >>> events_idx = cusum_filter(close, threshold=vol.mean())
-        >>> t1 = add_vertical_barrier(events_idx, close, num_days=10)
-        >>> events = get_events(close, events_idx, pt_sl=1.0, trgt=vol,
-        ...                     min_ret=0.01, t1=t1)
+        Snippet 3.3, AFML Chapter 3
     """
-    # Align target with event timestamps
-    trgt = trgt.loc[t_events]
+    _validate_close(close)
 
-    # Filter for minimum return threshold
-    trgt = trgt[trgt > min_ret]
-
-    # Set up vertical barriers
-    if t1 is False:
-        t1 = pd.Series(pd.NaT, index=t_events)
-
-    # Create events object with side (1.0 for symmetric barriers)
-    side_ = pd.Series(1.0, index=trgt.index)
-    events = pd.concat({"t1": t1, "trgt": trgt, "side": side_}, axis=1).dropna(subset=["trgt"])
-
-    # Apply barriers to find first touches
-    # Note: v1 uses serial processing. Full multiprocessing via mpPandasObj
-    # (from Chapter 20) will be integrated in production phase.
-    df0 = apply_pt_sl_on_t1(
-        close=close,
-        events=events,
-        pt_sl=[pt_sl, pt_sl],  # Symmetric barriers
-        molecule=events.index,
+    # Join trgt onto t_events
+    events = pl.DataFrame({"timestamp": t_events}).join(
+        trgt.rename({"volatility": "trgt"}),
+        on="timestamp",
+        how="left",
     )
 
-    # Get earliest barrier touch for each event
-    events["t1"] = df0.dropna(how="all").min(axis=1)
+    # Filter by min_ret
+    events = events.filter(pl.col("trgt") > min_ret).drop_nulls("trgt")
 
-    # Clean up and return
-    events = events.drop("side", axis=1)
+    # Add vertical barrier (t1 column)
+    if t1 is not None:
+        events = events.join(t1.rename({"t1": "t1_vert"}), on="timestamp", how="left")
+        # Fill missing t1 with last bar
+        last_ts = close["timestamp"][-1]
+        events = events.with_columns(
+            pl.col("t1_vert").fill_null(last_ts).alias("t1_vert")
+        )
+    else:
+        last_ts = close["timestamp"][-1]
+        events = events.with_columns(pl.lit(last_ts).alias("t1_vert"))
 
-    return events
+    # Add symmetric side
+    events = events.with_columns(pl.lit(1.0).alias("side"))
+
+    # Rename t1_vert to t1 for apply_pt_sl_on_t1
+    events_for_loop = events.rename({"t1_vert": "t1"})
+
+    # Extract NumPy arrays for the loop
+    close_np = close["close"].to_numpy()
+    ts_np = close["timestamp"].cast(pl.Int64).to_numpy()
+
+    # Run barrier detection loop
+    barrier_results = apply_pt_sl_on_t1(
+        close_np=close_np,
+        ts_np=ts_np,
+        events_df=events_for_loop,
+        pt_sl=[pt_sl, pt_sl],
+    )
+
+    # Find earliest barrier touch: min of t1_barrier, sl, pt
+    barrier_results = barrier_results.with_columns([
+        pl.min_horizontal(
+            pl.col("t1_barrier"),
+            pl.col("sl").fill_null(pl.col("t1_barrier")),
+            pl.col("pt").fill_null(pl.col("t1_barrier")),
+        ).alias("t1_first")
+    ])
+
+    # Join back to events
+    result = events.join(
+        barrier_results.select(["timestamp", "t1_first"]),
+        on="timestamp",
+        how="left",
+    ).select([
+        "timestamp",
+        pl.col("t1_first").alias("t1"),
+        "trgt",
+    ])
+
+    return result
 
 
-def get_bins(events: pd.DataFrame, close: pd.Series) -> pd.DataFrame:
+def get_bins(events: pl.DataFrame, close: pl.DataFrame) -> pl.DataFrame:
     """Generate labels (-1, 0, 1) from triple-barrier events.
 
-    This function takes the output from get_events() and generates the final
-    labels by evaluating the realized return at the time the first barrier
-    was touched.
-
-    The function:
-    1. Aligns prices with event start and barrier touch timestamps
-    2. Calculates realized returns from event start to first barrier touch
-    3. Applies sign function to generate labels:
-       - 1 if return is positive (profit-taking hit or positive at expiration)
-       - -1 if return is negative (stop-loss hit or negative at expiration)
-       - 0 if return is exactly zero (rare)
-
-    Note: The function can be modified to return 0 specifically when the
-    vertical barrier is touched first, to filter out neutral price paths.
+    Computes the realized return from event start to first barrier touch,
+    then applies sign to generate the label.
 
     Args:
-        events: DataFrame output from get_events(), with index as event start
-            times and 't1' column containing timestamps of first barrier touches.
-        close: Series of prices used to calculate returns between event start
-            and barrier touch.
+        events: DataFrame with 'timestamp' and 't1' columns (output of get_events).
+        close: DataFrame with 'timestamp' and 'close' columns.
 
     Returns:
-        DataFrame with index matching events, containing:
-            - 'ret': Realized return from event start to first touch
-            - 'bin': Label (-1, 0, or 1) based on sign of return
+        DataFrame with 'timestamp', 'ret', 'label' columns.
 
     Reference:
-        Snippet 3.5 in AFML Chapter 3, Section 3.5
-
-    Example:
-        >>> events = get_events(close, t_events, pt_sl=1.0, trgt=vol,
-        ...                     min_ret=0.01, t1=t1)
-        >>> labels = get_bins(events, close)
-        >>> # labels['bin'] contains -1, 0, or 1 for each event
+        Snippet 3.5, AFML Chapter 3
     """
-    # Drop events with no barrier touch
-    events_ = events.dropna(subset=["t1"])
+    _validate_t1(events)
 
-    # Get all unique timestamps (event starts and barrier touches)
-    px = events_.index.union(events_["t1"].values).drop_duplicates()
-
-    # Align prices to these timestamps
-    px = close.reindex(px, method="bfill")
-
-    # Calculate returns and labels
-    out = pd.DataFrame(index=events_.index)
-    out["ret"] = px.loc[events_["t1"].values].values / px.loc[events_.index] - 1
-    out["bin"] = np.sign(out["ret"])
-
-    return out
+    # Join close prices at t0 and t1
+    result = (
+        events.join(close.rename({"close": "close_t0"}), on="timestamp", how="left")
+        .join(
+            close.rename({"timestamp": "t1", "close": "close_t1"}),
+            on="t1",
+            how="left",
+        )
+        .with_columns(
+            (pl.col("close_t1") / pl.col("close_t0") - 1).alias("ret")
+        )
+        .with_columns(
+            pl.col("ret").sign().cast(pl.Int8).alias("label")
+        )
+        .select(["timestamp", "t1", "ret", "label"])
+    )
+    return result
 
 
 def triple_barrier_labels(
-    close: pd.Series,
-    t_events: pd.DatetimeIndex,
+    close: pl.DataFrame,
+    t_events: pl.Series,
     pt_sl: float,
-    num_days: int,
+    num_bars: int,
     vol_span: int = 100,
     min_ret: float = 0.0,
-    num_threads: int = 1,
-) -> pd.DataFrame:
-    """Complete triple-barrier labeling workflow (high-level wrapper).
+) -> pl.DataFrame:
+    """Complete triple-barrier labeling pipeline (high-level wrapper).
 
-    This convenience function combines all the core triple-barrier utilities
-    into a single workflow:
-    1. Compute dynamic volatility thresholds (daily_volatility)
-    2. Add vertical time barriers (add_vertical_barrier)
-    3. Find first barrier touches (get_events)
-    4. Generate final labels (get_bins)
-
-    This implements the full triple-barrier method, which addresses the
-    shortcomings of fixed-time horizon labeling by:
-    - Using dynamic thresholds based on volatility (heteroscedasticity)
-    - Accounting for the price path during holding period (path-dependency)
-    - Combining profit-taking, stop-loss, and time expiration barriers
+    Combines volatility estimation, vertical barrier construction, barrier
+    detection, and label generation into one call.
 
     Args:
-        close: Series of closing prices indexed by timestamp.
-        t_events: DatetimeIndex of timestamps that seed each triple-barrier event.
-            Typically output of CUSUM filter or other event-based sampling.
-        pt_sl: Non-negative float setting width of horizontal barriers as a
-            multiple of target volatility. Applied symmetrically.
-        num_days: Number of days for vertical barrier (time expiration).
-        vol_span: Number of days for volatility EWMA calculation. Default 100.
-        min_ret: Minimum target return to initiate barrier search. Default 0.0.
-        num_threads: Number of threads for parallel processing. Default 1.
+        close: DataFrame with 'timestamp' (Datetime) and 'close' (Float) columns.
+        t_events: Series of event timestamps to label.
+        pt_sl: Symmetric barrier width as multiple of volatility.
+        num_bars: Number of bars for vertical barrier (max holding period).
+        vol_span: EWMA span for volatility. Default 100.
+        min_ret: Minimum volatility to include an event. Default 0.0.
 
     Returns:
-        DataFrame with index matching successful events, containing:
-            - 'ret': Realized return at first barrier touch
-            - 'bin': Label (-1, 0, or 1) based on sign of return
-            - 't1': Timestamp of first barrier touched
-            - 'trgt': Target volatility for the event
+        DataFrame with 'timestamp', 't1', 'ret', 'label', 'trgt' columns.
+        t1 is guaranteed to have no nulls.
 
-    Example:
-        >>> from tradelab.lopezdp_utils.data_structures import get_t_events
-        >>> events_idx = get_t_events(close, threshold=0.01)  # CUSUM filter
-        >>> labels = triple_barrier_labels(
-        ...     close=close,
-        ...     t_events=events_idx,
-        ...     pt_sl=1.0,
-        ...     num_days=10,
-        ...     vol_span=100,
-        ...     min_ret=0.005
-        ... )
+    Reference:
+        AFML Chapter 3
     """
-    from .barriers import add_vertical_barrier
-    from .thresholds import daily_volatility
+    _validate_close(close)
 
-    # Step 1: Compute dynamic volatility thresholds
+    # Step 1: Compute volatility
     trgt = daily_volatility(close, span=vol_span)
 
     # Step 2: Add vertical barriers
-    t1 = add_vertical_barrier(t_events, close, num_days)
+    t1_df = add_vertical_barrier(t_events, close, num_bars=num_bars)
 
     # Step 3: Find first barrier touches
     events = get_events(
@@ -290,14 +398,116 @@ def triple_barrier_labels(
         pt_sl=pt_sl,
         trgt=trgt,
         min_ret=min_ret,
-        num_threads=num_threads,
-        t1=t1,
+        t1=t1_df,
     )
 
-    # Step 4: Generate final labels
+    # Fill any remaining null t1 with last bar (safety guardrail)
+    last_ts = close["timestamp"][-1]
+    events = events.with_columns(pl.col("t1").fill_null(last_ts))
+
+    # Step 4: Generate labels
     labels = get_bins(events, close)
 
-    # Merge events info with labels
-    labels = labels.join(events[["t1", "trgt"]], how="left")
-
     return labels
+
+
+def t_value_linear_trend(close: np.ndarray) -> float:
+    """Calculate t-value of slope coefficient in a linear time-trend model.
+
+    Fits: price[t] = β₀ + β₁·t + ε[t]. Returns t-stat for β₁.
+    Positive t-value → uptrend; negative → downtrend.
+
+    Args:
+        close: Array of prices to fit the linear trend over.
+
+    Returns:
+        t-value of the slope coefficient.
+
+    Reference:
+        Snippet 5.1, MLAM Section 5.4
+    """
+    x = np.ones((len(close), 2))
+    x[:, 1] = np.arange(len(close))
+    ols = sm.OLS(close, x).fit()
+    return float(ols.tvalues[1])
+
+
+def trend_scanning_labels(
+    close: pl.DataFrame,
+    t_events: pl.Series,
+    span: range | tuple[int, int],
+) -> pl.DataFrame:
+    """Generate labels using the trend-scanning method.
+
+    Scans multiple look-forward horizons for each event, fits a linear
+    trend, and labels based on the horizon with the maximum absolute t-value.
+
+    # TODO(numba): OLS per-event loop is sequential; evaluate JIT
+
+    Args:
+        close: DataFrame with 'timestamp' and 'close' columns.
+        t_events: Series of event timestamps to label.
+        span: Range or (start, end) tuple of look-forward horizons to test.
+
+    Returns:
+        DataFrame with 'timestamp', 't1', 't_val', 'label' columns.
+
+    Reference:
+        Snippet 5.2, MLAM Section 5.4
+    """
+    _validate_close(close)
+
+    if isinstance(span, tuple):
+        hrzns = range(*span)
+    else:
+        hrzns = span
+
+    close_np = close["close"].to_numpy()
+    ts_np = close["timestamp"].cast(pl.Int64).to_numpy()
+    event_ts_int64 = t_events.cast(pl.Int64).to_numpy()
+    event_ts = t_events.to_numpy()
+
+    rows = []
+    for dt0_int, dt0 in zip(event_ts_int64, event_ts):
+        iloc0 = int(np.searchsorted(ts_np, dt0_int, side="left"))
+
+        if iloc0 + max(hrzns) > len(close_np):
+            continue
+
+        best_t_val = 0.0
+        best_t1 = None
+
+        for hrzn in hrzns:
+            end_idx = iloc0 + hrzn
+            if end_idx >= len(close_np):
+                break
+            segment = close_np[iloc0 : end_idx + 1]
+            t_val = t_value_linear_trend(segment)
+            if np.isfinite(t_val) and abs(t_val) > abs(best_t_val):
+                best_t_val = t_val
+                best_t1 = ts_np[end_idx]
+
+        if best_t1 is not None:
+            rows.append({
+                "timestamp": int(dt0_int),
+                "t1": int(best_t1),
+                "t_val": best_t_val,
+                "label": int(np.sign(best_t_val)),
+            })
+
+    if not rows:
+        return pl.DataFrame(schema={
+            "timestamp": pl.Datetime("us"),
+            "t1": pl.Datetime("us"),
+            "t_val": pl.Float64,
+            "label": pl.Int8,
+        })
+
+    result = pl.DataFrame({
+        "timestamp": pl.Series([r["timestamp"] for r in rows], dtype=pl.Int64).cast(pl.Datetime("us")),
+        "t1": pl.Series([r["t1"] for r in rows], dtype=pl.Int64).cast(pl.Datetime("us")),
+        "t_val": [r["t_val"] for r in rows],
+        "label": pl.Series([r["label"] for r in rows], dtype=pl.Int8),
+    })
+
+    return result
