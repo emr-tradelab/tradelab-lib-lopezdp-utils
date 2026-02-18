@@ -19,7 +19,22 @@ Part of the Tradelab algorithmic trading ecosystem.
 ## Usage
 
 ```python
-from tradelab.lopezdp_utils.data_structures import ...
+# Phase 2 (production) modules — Polars I/O
+from tradelab.lopezdp_utils.data import (
+    time_bars, tick_bars, volume_bars, dollar_bars,
+    tick_imbalance_bars, volume_imbalance_bars, dollar_imbalance_bars,
+    tick_runs_bars, volume_runs_bars, dollar_runs_bars,
+    get_t_events, sampling_linspace, sampling_uniform,
+)
+from tradelab.lopezdp_utils.data.futures import roll_gaps, roll_and_rebase
+from tradelab.lopezdp_utils.data.etf import etf_trick
+from tradelab.lopezdp_utils.data.microstructure import (
+    tick_rule, corwin_schultz_spread, becker_parkinson_volatility,
+    roll_model, kyle_lambda, amihud_lambda, hasbrouck_lambda,
+    volume_bucket, vpin,
+)
+
+# Phase 1 (v1) modules — pandas/numpy, not yet migrated
 from tradelab.lopezdp_utils.labeling import ...
 from tradelab.lopezdp_utils.sample_weights import ...
 from tradelab.lopezdp_utils.fractional_diff import ...
@@ -36,7 +51,6 @@ from tradelab.lopezdp_utils.strategy_risk import ...
 from tradelab.lopezdp_utils.ml_asset_allocation import ...
 from tradelab.lopezdp_utils.structural_breaks import ...
 from tradelab.lopezdp_utils.entropy_features import ...
-from tradelab.lopezdp_utils.microstructure import ...
 from tradelab.lopezdp_utils.hpc import ...
 ```
 
@@ -47,7 +61,7 @@ Each submodule corresponds to a chapter/topic from the books:
 ### Part 1: Data Analysis
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
-| `data_structures` | Ch 2 | Financial Data Structures (bars, imbalance bars) | ✅ v1 Complete |
+| `data` | Ch 2, 19 | Bars, Sampling, Futures, ETF Trick, Microstructure | ✅ Phase 2 Complete (Polars) |
 | `labeling` | Ch 3 | Triple-Barrier Method, Meta-Labeling, Trend-Scanning | ✅ v1 Complete |
 | `sample_weights` | Ch 4 | Sample Weights, Uniqueness, Sequential Bootstrap | ✅ v1 Complete |
 | `fractional_diff` | Ch 5 | Fractionally Differentiated Features | ✅ v1 Complete |
@@ -76,7 +90,7 @@ Each submodule corresponds to a chapter/topic from the books:
 |--------|---------|-------|--------|
 | `structural_breaks` | Ch 17 | Structural Breaks (CUSUM, SADF) | ✅ v1 Complete |
 | `entropy_features` | Ch 18 | Entropy Features (LZ, Kontoyiannis, MI, VI) | ✅ v1 Complete |
-| `microstructure` | Ch 19 | Market Microstructure Features | ✅ v1 Complete |
+| `data.microstructure` | Ch 19 | Market Microstructure Features | ✅ Phase 2 Complete (merged into `data/`) |
 
 ### Part 5: High-Performance Computing
 | Module | Chapter | Topic | Status |
@@ -86,6 +100,34 @@ Each submodule corresponds to a chapter/topic from the books:
 ---
 
 ## Module Details
+
+### `data` — Chapters 2 & 19: Data Layer (Phase 2)
+
+> **Status:** Phase 2 complete. Polars I/O throughout. 61 tests passing.
+> Replaces `data_structures/` (bars, sampling, futures, etf) and `microstructure/` (fully merged).
+> `data_structures/discretization.py` and `pca.py` are deferred to session 4 (`features/`).
+
+**Bars** (`data/bars.py`, AFML Ch.2):
+- `time_bars()` — Polars `group_by_dynamic` aggregation
+- `tick_bars()`, `volume_bars()`, `dollar_bars()` — stateful accumulation, Polars output
+- `tick_imbalance_bars()`, `volume_imbalance_bars()`, `dollar_imbalance_bars()` — fixed EWMA antipattern (incremental formula)
+- `tick_runs_bars()`, `volume_runs_bars()`, `dollar_runs_bars()`
+
+**Sampling** (`data/sampling.py`, AFML Ch.2):
+- `get_t_events()` — CUSUM event filter, Polars I/O, NumPy loop
+- `sampling_linspace()`, `sampling_uniform()` — Polars output
+
+**Futures** (`data/futures.py`, AFML Ch.2):
+- `roll_gaps()`, `roll_and_rebase()` — Polars
+- `get_rolled_series()` — HDF5 loader stub (pandas internally, Polars at boundary)
+
+**ETF Trick** (`data/etf.py`, AFML Ch.2):
+- `etf_trick()` — Basket synthetic total-return. Pandas internally, Polars at boundary.
+
+**Microstructure** (`data/microstructure.py`, AFML Ch.19):
+- See `data.microstructure` section below.
+
+---
 
 ### `labeling` — Chapter 3: Labeling
 
@@ -435,11 +477,13 @@ Entropy-based features for quantifying information content, market efficiency, a
 - `kl_divergence()` -- Kullback-Leibler divergence between distributions
 - `cross_entropy()` -- Cross-entropy scoring function for classification
 
-**Note**: Core information-theoretic utilities (num_bins, variation_of_information, mutual_information_optimal) are in `data_structures.discretization` where they were originally extracted from MLAM Section 3.9.
+**Note**: Core information-theoretic utilities (num_bins, variation_of_information, mutual_information_optimal) were originally extracted to `data_structures.discretization` (MLAM Section 3.9). In Phase 2, they will move to `features/entropy.py` (session 4). The v1 code remains in git history.
 
 ---
 
-### `microstructure` — Chapter 19: Microstructural Features
+### `data.microstructure` — Chapter 19: Microstructural Features
+
+> **Phase 2:** Migrated from `microstructure/` into `data/microstructure.py`. Import via `from tradelab.lopezdp_utils.data.microstructure import ...`
 
 Market microstructure features organized by generation, from classical spread estimators to modern informed-trading detection.
 
@@ -487,3 +531,5 @@ Multiprocessing utilities for parallelizing financial ML computations across CPU
 **Key Insight**: Financial ML tasks (labeling, sample weights, feature importance) involve applying the same function to many independent subsets of data. `mp_pandas_obj` automates the partition-dispatch-concatenate pattern. Use `lin_parts` for uniform workloads (row-wise operations) and `nested_parts` for triangular workloads (pairwise computations). Set `num_threads=1` for debugging before scaling up.
 
 > Phase 1 extraction is complete. See `docs/phase1_extraction/TODO.md` for the archived progress log.
+> Phase 2 Session 1 (`hpc/` → `_hpc.py`) and Session 2 (`data/`) are complete. See `docs/plans/phase2_migration/` for session plans.
+> A new reference document `LIBRARY_STANDARDS.md` at the project root documents verified Polars API patterns and pitfalls.

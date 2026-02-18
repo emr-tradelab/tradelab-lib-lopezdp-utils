@@ -2,7 +2,7 @@
 
 Each session gets its own detailed plan document when we start it. Below is the scope and key decisions for each.
 
-### Session 2: `data/` (branch: `phase2/data`)
+### Session 2: `data/` (branch: `phase2/data`) ✅ COMPLETE — merged to main
 **Source:** `data_structures/` (9 files, 1888 lines) + `microstructure/` (5 files, 568 lines)
 **Target:** `data/bars.py`, `data/sampling.py`, `data/futures.py`, `data/etf.py`, `data/microstructure.py`
 **Key work:**
@@ -13,6 +13,7 @@ Each session gets its own detailed plan document when we start it. Below is the 
 - `discretization.py` and `pca.py` move to `features/` (session 4)
 - `# TODO(numba): evaluate JIT` on imbalance bar inner loops
 - Tests: bar correctness with known inputs, CUSUM event detection, spread estimators
+- 61 tests passing; `LIBRARY_STANDARDS.md` created documenting verified Polars API patterns
 
 ### Session 3: `labeling/` (branch: `phase2/labeling`)
 **Source:** `labeling/` (8 files, 1088 lines) + `sample_weights/` (5 files, 922 lines)

@@ -49,6 +49,13 @@ Convert all v1 code into production-grade, high-performance library code.
 - Public API design and `__init__.py` exports cleanup
 - Documentation polish
 
+**Session progress:**
+- Session 1 (`_hpc.py`): ✅ Complete — merged to `main`
+- Session 2 (`data/`): ✅ Complete — merged to `main`, 61 tests passing
+- Session 3 (`labeling/`): pending
+- Sessions 4-7: pending
+- See `docs/plans/phase2_migration/` for detailed session plans
+
 ---
 
 ## Session Workflow
@@ -91,17 +98,23 @@ Each chapter maps to a submodule. Naming follows the chapter's primary topic:
 ```
 src/tradelab/lopezdp_utils/
 ├── __init__.py
-# Part 1: Data Analysis
-├── data_structures/         # Ch. 2 - Financial Data Structures
+├── _hpc.py                  # Ch. 20 - Multiprocessing (Phase 2 complete, merged from hpc/)
+# Phase 2 packages (Polars, tests, production-grade)
+├── data/                    # Ch. 2 + 19 - Bars, Sampling, Futures, ETF, Microstructure (Phase 2 complete)
+│   ├── __init__.py          # Re-exports bars + sampling public API
+│   ├── bars.py              # Standard + information-driven bars
+│   ├── sampling.py          # CUSUM filter + linspace/uniform sampling
+│   ├── futures.py           # Roll gaps, roll-and-rebase, HDF5 loader stub
+│   ├── etf.py               # ETF trick
+│   └── microstructure.py    # Spreads, price impact, VPIN
+# Phase 1 submodules (pandas/numpy, v1 only — pending Phase 2 migration)
 ├── labeling/                # Ch. 3 - Labeling (Triple-Barrier, Meta-Labeling)
 ├── sample_weights/          # Ch. 4 - Sample Weights
 ├── fractional_diff/         # Ch. 5 - Fractionally Differentiated Features
-# Part 2: Modelling
 ├── ensemble_methods/        # Ch. 6 - Ensemble Methods
 ├── cross_validation/        # Ch. 7 - Cross-Validation in Finance
 ├── feature_importance/      # Ch. 8 - Feature Importance
 ├── hyperparameter_tuning/   # Ch. 9 - Hyper-Parameter Tuning
-# Part 3: Backtesting
 ├── bet_sizing/              # Ch. 10 - Bet Sizing
 ├── backtest_dangers/        # Ch. 11 - The Dangers of Backtesting
 ├── backtest_cv/             # Ch. 12 - Backtesting through Cross-Validation
@@ -109,12 +122,12 @@ src/tradelab/lopezdp_utils/
 ├── backtest_statistics/     # Ch. 14 - Backtest Statistics
 ├── strategy_risk/           # Ch. 15 - Understanding Strategy Risk
 ├── ml_asset_allocation/     # Ch. 16 - Machine Learning Asset Allocation
-# Part 4: Useful Financial Features
 ├── structural_breaks/       # Ch. 17 - Structural Breaks
-├── entropy/                 # Ch. 18 - Entropy Features
-├── microstructure/          # Ch. 19 - Microstructural Features
-# Part 5: High-Performance Computing
-└── hpc/                     # Ch. 20 - Multiprocessing and Vectorization
+└── entropy_features/        # Ch. 18 - Entropy Features
+# Deleted (Phase 2 migration):
+# data_structures/           → data/ (merged in session 2)
+# microstructure/            → data/microstructure.py (merged in session 2)
+# hpc/                       → _hpc.py (merged in session 1)
 ```
 
 > **Note:** Chapters 1 (intro), 21-22 (quantum/specialized HPC) may not have extractable utilities.
