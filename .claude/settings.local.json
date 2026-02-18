@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__notebooklm__list_notebooks",
+      "mcp__notebooklm__ask_question",
+      "mcp__notebooklm__add_notebook",
+      "mcp__notebooklm__get_health",
+      "Bash(git merge:*)",
+      "Glob",
+      "Read",
+      "Grep",
+      "mcp__notebooklm__select_notebook",
+      "Bash(git -C:*)",
+      "Bash(git rm:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "context7"
+  ],
+  "disabledMcpServers": [
+    "github",
+    "trello",
+    "notebooklm"
+  ]
+}
