@@ -1,75 +1,64 @@
-"""Labeling methods for financial machine learning.
+"""Labeling and sample weighting — AFML Chapters 3-4.
 
-This module provides implementations of labeling methods from AFML Chapter 3
-and complementary content from ML for Asset Managers, including:
+This package handles the second and third stages of López de Prado's pipeline:
+price series → labeled observations (with t1 metadata) → sample weights.
 
-Core Labeling Methods:
-- Triple-barrier method (path-dependent, dynamic thresholds)
-- Fixed-time horizon method (standard approach with known flaws)
-- Trend-scanning method (statistical significance-based)
-
-Triple-Barrier Components:
-- Dynamic volatility thresholds
-- Vertical (time) barriers
-- Event detection and label generation
-- Meta-labeling extensions
-
-Utilities:
-- Class imbalance handling
-- Bet sizing from meta-labels
+The t1 timestamp (first barrier touch time) is the critical metadata that
+connects labeling to weighting, purging, and embargoing downstream.
 
 Reference:
-    AFML Chapter 3: Labeling
-    MLAM Section 5: Financial Labels
+    López de Prado, "Advances in Financial Machine Learning", Chapters 3-4
+    López de Prado, "Machine Learning for Asset Managers", Chapter 5
 """
 
-# Barriers
-from .barriers import add_vertical_barrier
-
-# Bet sizing (from MLAM)
-from .bet_sizing import (
-    bet_size_dynamic,
-    bet_size_from_ensemble,
-    bet_size_from_probability,
+from tradelab.lopezdp_utils.labeling.class_balance import (
+    drop_labels,
+    get_class_weights,
 )
-
-# Class balance
-from .class_balance import drop_labels
-
-# Fixed-time horizon method
-from .fixed_horizon import fixed_time_horizon
-
-# Meta-labeling extensions
-from .meta_labeling import get_bins_meta, get_events_meta
-
-# Thresholds
-from .thresholds import daily_volatility
-
-# Trend-scanning method (from MLAM)
-from .trend_scanning import t_value_linear_trend, trend_scanning_labels
-
-# Triple-barrier method
-from .triple_barrier import (
-    apply_pt_sl_on_t1,
+from tradelab.lopezdp_utils.labeling.meta_labeling import (
+    get_bins_meta,
+    get_events_meta,
+)
+from tradelab.lopezdp_utils.labeling.sample_weights import (
+    get_avg_uniqueness,
+    get_ind_matrix,
+    get_time_decay,
+    mp_num_co_events,
+    mp_sample_tw,
+    mp_sample_w,
+    seq_bootstrap,
+)
+from tradelab.lopezdp_utils.labeling.triple_barrier import (
+    add_vertical_barrier,
+    daily_volatility,
+    fixed_time_horizon,
     get_bins,
     get_events,
+    trend_scanning_labels,
     triple_barrier_labels,
 )
 
 __all__ = [
-    "add_vertical_barrier",
-    "apply_pt_sl_on_t1",
-    "bet_size_dynamic",
-    "bet_size_from_ensemble",
-    "bet_size_from_probability",
+    # Triple-barrier labeling
     "daily_volatility",
-    "drop_labels",
+    "add_vertical_barrier",
     "fixed_time_horizon",
-    "get_bins",
-    "get_bins_meta",
     "get_events",
-    "get_events_meta",
-    "t_value_linear_trend",
-    "trend_scanning_labels",
+    "get_bins",
     "triple_barrier_labels",
+    "trend_scanning_labels",
+    # Meta-labeling
+    "get_events_meta",
+    "get_bins_meta",
+    # Sample weights
+    "mp_num_co_events",
+    "mp_sample_tw",
+    "get_ind_matrix",
+    "get_avg_uniqueness",
+    "seq_bootstrap",
+    "mp_sample_w",
+    "get_time_decay",
+    # Class balance
+    "drop_labels",
+    "get_class_weights",
 ]
