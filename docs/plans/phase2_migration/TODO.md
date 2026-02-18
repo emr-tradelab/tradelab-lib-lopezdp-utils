@@ -6,7 +6,7 @@
 |---------|--------|--------|
 | Session 1 | `_hpc.py` | ✅ Complete |
 | Session 2 | `data/` | ✅ Complete |
-| Session 3 | `labeling/` | 🔄 In Progress |
+| Session 3 | `labeling/` | ✅ Complete |
 | Session 4 | `features/` | ⏳ Pending |
 | Session 5 | `cross_validation/` | ⏳ Pending |
 | Session 6 | `evaluation/` | ⏳ Pending |

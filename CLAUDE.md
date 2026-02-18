@@ -37,5 +37,6 @@ After any big or complex implementation, call `Docs-Updater` subagent to update 
 
 - **Session 1** (`_hpc.py`): complete
 - **Session 2** (`data/`): complete — `data_structures/` and `microstructure/` are **deleted**; use `tradelab.lopezdp_utils.data` instead
-- **Session 3** (`labeling/`): next
+- **Session 3** (`labeling/`): complete — old `labeling/` (barriers, bet_sizing, fixed_horizon, thresholds, trend_scanning) and `sample_weights/` are **deleted**; use `tradelab.lopezdp_utils.labeling` instead; `bet_sizing.py` and `strategy_redundancy.py` deferred to session 6
+- **Session 4** (`features/`): next
 - See `docs/plans/phase2_migration/` for session plans and `LIBRARY_STANDARDS.md` for verified Polars patterns

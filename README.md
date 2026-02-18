@@ -34,9 +34,15 @@ from tradelab.lopezdp_utils.data.microstructure import (
     volume_bucket, vpin,
 )
 
+# Phase 2 (production) modules — Polars I/O
+from tradelab.lopezdp_utils.labeling import (
+    triple_barrier_labels, daily_volatility, add_vertical_barrier,
+    get_events, get_bins, get_events_meta, get_bins_meta,
+    mp_num_co_events, mp_sample_tw, get_ind_matrix, get_avg_uniqueness,
+    seq_bootstrap, mp_sample_w, get_time_decay, get_class_weights,
+)
+
 # Phase 1 (v1) modules — pandas/numpy, not yet migrated
-from tradelab.lopezdp_utils.labeling import ...
-from tradelab.lopezdp_utils.sample_weights import ...
 from tradelab.lopezdp_utils.fractional_diff import ...
 from tradelab.lopezdp_utils.ensemble_methods import ...
 from tradelab.lopezdp_utils.cross_validation import ...
@@ -62,8 +68,7 @@ Each submodule corresponds to a chapter/topic from the books:
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
 | `data` | Ch 2, 19 | Bars, Sampling, Futures, ETF Trick, Microstructure | ✅ Phase 2 Complete (Polars) |
-| `labeling` | Ch 3 | Triple-Barrier Method, Meta-Labeling, Trend-Scanning | ✅ v1 Complete |
-| `sample_weights` | Ch 4 | Sample Weights, Uniqueness, Sequential Bootstrap | ✅ v1 Complete |
+| `labeling` | Ch 3, 4 | Triple-Barrier, Meta-Labeling, Sample Weights, Class Balance | ✅ Phase 2 Complete (Polars) |
 | `fractional_diff` | Ch 5 | Fractionally Differentiated Features | ✅ v1 Complete |
 
 ### Part 2: Modelling
@@ -129,7 +134,11 @@ Each submodule corresponds to a chapter/topic from the books:
 
 ---
 
-### `labeling` — Chapter 3: Labeling
+### `labeling` — Chapters 3 & 4: Labeling + Sample Weights (Phase 2)
+
+> **Status:** Phase 2 complete. Polars I/O throughout. 96 tests passing.
+> Replaces old `labeling/` (barriers, bet_sizing, fixed_horizon, thresholds, trend_scanning) and `sample_weights/` (fully merged).
+> `bet_sizing.py` and `strategy_redundancy.py` deferred to session 6 (`evaluation/`).
 
 Path-dependent labeling methods that account for volatility and price paths during holding periods.
 
@@ -154,7 +163,9 @@ Path-dependent labeling methods that account for volatility and price paths duri
 - `bet_size_from_probability()` — Single classifier bet sizing (MLAM 5.5)
 - `bet_size_from_ensemble()` — Multi-classifier bet sizing (MLAM 5.5)
 
-### `sample_weights` — Chapter 4: Sample Weights
+### `sample_weights` — Chapter 4: Sample Weights (merged into `labeling/`)
+
+> **Phase 2:** Merged into `labeling/sample_weights.py` and `labeling/class_balance.py`. Import via `from tradelab.lopezdp_utils.labeling import ...`
 
 Correcting for non-IID violations in financial data where labels overlap in time, causing informational redundancy.
 
@@ -317,7 +328,7 @@ Tools for detecting backtest overfitting. Chapter 11 is primarily conceptual, in
 **Combinatorially Symmetric Cross-Validation** (AFML 11.5):
 - `probability_of_backtest_overfitting()` — Estimate PBO by evaluating all combinatorial train/test splits of strategy trials, computing rank logits, and measuring the fraction with negative logits (below-median OOS performance)
 
-**Key Insight**: If the best in-sample strategy consistently performs below median out-of-sample across combinatorial splits, the backtest is overfit. PBO > 0.5 indicates likely overfitting. For multiple testing corrections (Deflated Sharpe, FWER), see `sample_weights.strategy_redundancy`.
+**Key Insight**: If the best in-sample strategy consistently performs below median out-of-sample across combinatorial splits, the backtest is overfit. PBO > 0.5 indicates likely overfitting. For multiple testing corrections (Deflated Sharpe, FWER), see `evaluation.overfitting` (session 6).
 
 ### `backtest_cv` — Chapter 12: Backtesting through Cross-Validation
 
@@ -531,5 +542,5 @@ Multiprocessing utilities for parallelizing financial ML computations across CPU
 **Key Insight**: Financial ML tasks (labeling, sample weights, feature importance) involve applying the same function to many independent subsets of data. `mp_pandas_obj` automates the partition-dispatch-concatenate pattern. Use `lin_parts` for uniform workloads (row-wise operations) and `nested_parts` for triangular workloads (pairwise computations). Set `num_threads=1` for debugging before scaling up.
 
 > Phase 1 extraction is complete. See `docs/phase1_extraction/TODO.md` for the archived progress log.
-> Phase 2 Session 1 (`hpc/` → `_hpc.py`) and Session 2 (`data/`) are complete. See `docs/plans/phase2_migration/` for session plans.
-> A new reference document `LIBRARY_STANDARDS.md` at the project root documents verified Polars API patterns and pitfalls.
+> Phase 2 Sessions 1-3 are complete (`_hpc.py`, `data/`, `labeling/`). See `docs/plans/phase2_migration/` for session plans.
+> `LIBRARY_STANDARDS.md` at the project root documents verified Polars API patterns and pitfalls.

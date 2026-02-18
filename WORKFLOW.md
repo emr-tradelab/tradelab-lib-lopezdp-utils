@@ -52,7 +52,7 @@ Convert all v1 code into production-grade, high-performance library code.
 **Session progress:**
 - Session 1 (`_hpc.py`): ✅ Complete — merged to `main`
 - Session 2 (`data/`): ✅ Complete — merged to `main`, 61 tests passing
-- Session 3 (`labeling/`): pending
+- Session 3 (`labeling/`): ✅ Complete — merged to `main`, 96 tests passing
 - Sessions 4-7: pending
 - See `docs/plans/phase2_migration/` for detailed session plans
 
@@ -107,9 +107,13 @@ src/tradelab/lopezdp_utils/
 │   ├── futures.py           # Roll gaps, roll-and-rebase, HDF5 loader stub
 │   ├── etf.py               # ETF trick
 │   └── microstructure.py    # Spreads, price impact, VPIN
+├── labeling/                # Ch. 3 + 4 - Labeling + Sample Weights (Phase 2 complete)
+│   ├── __init__.py          # Public exports
+│   ├── triple_barrier.py    # Triple-Barrier, Meta-Labeling, Fixed-Horizon, Trend-Scanning
+│   ├── meta_labeling.py     # Meta-Labeling asymmetric barriers
+│   ├── sample_weights.py    # Concurrency, uniqueness, sequential bootstrap, return attribution
+│   └── class_balance.py     # Class weights and imbalance handling
 # Phase 1 submodules (pandas/numpy, v1 only — pending Phase 2 migration)
-├── labeling/                # Ch. 3 - Labeling (Triple-Barrier, Meta-Labeling)
-├── sample_weights/          # Ch. 4 - Sample Weights
 ├── fractional_diff/         # Ch. 5 - Fractionally Differentiated Features
 ├── ensemble_methods/        # Ch. 6 - Ensemble Methods
 ├── cross_validation/        # Ch. 7 - Cross-Validation in Finance
@@ -128,6 +132,8 @@ src/tradelab/lopezdp_utils/
 # data_structures/           → data/ (merged in session 2)
 # microstructure/            → data/microstructure.py (merged in session 2)
 # hpc/                       → _hpc.py (merged in session 1)
+# labeling/ (old v1 files)   → labeling/ (merged in session 3)
+# sample_weights/            → labeling/sample_weights.py + labeling/class_balance.py (merged in session 3)
 ```
 
 > **Note:** Chapters 1 (intro), 21-22 (quantum/specialized HPC) may not have extractable utilities.
