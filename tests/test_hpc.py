@@ -1,8 +1,6 @@
 """Tests for _hpc internal module."""
 
-import numpy as np
 import pandas as pd
-import pytest
 
 
 class TestLinParts:
