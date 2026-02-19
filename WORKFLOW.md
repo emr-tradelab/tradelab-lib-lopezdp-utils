@@ -53,7 +53,8 @@ Convert all v1 code into production-grade, high-performance library code.
 - Session 1 (`_hpc.py`): ✅ Complete — merged to `main`
 - Session 2 (`data/`): ✅ Complete — merged to `main`, 61 tests passing
 - Session 3 (`labeling/`): ✅ Complete — merged to `main`, 96 tests passing
-- Sessions 4-7: pending
+- Session 4 (`features/`): ✅ Complete — merged to `main`, 150 tests passing
+- Sessions 5-7: pending
 - See `docs/plans/phase2_migration/` for detailed session plans
 
 ---
@@ -113,11 +114,16 @@ src/tradelab/lopezdp_utils/
 │   ├── meta_labeling.py     # Meta-Labeling asymmetric barriers
 │   ├── sample_weights.py    # Concurrency, uniqueness, sequential bootstrap, return attribution
 │   └── class_balance.py     # Class weights and imbalance handling
+├── features/                # Ch. 5, 8, 17, 18 + MLAM - Features (Phase 2 complete)
+│   ├── __init__.py          # Public exports (32 symbols)
+│   ├── fractional_diff.py   # FFD, expanding fracdiff, min-FFD (Polars I/O, NumPy core)
+│   ├── entropy.py           # Shannon/LZ estimators, encoding, market efficiency, MI, VI
+│   ├── structural_breaks.py # SADF, CUSUM (BDE + CSW), Chow-DF, QADF, CADF
+│   ├── importance.py        # MDI, MDA, SFI, ONC clustering, clustered MDI/MDA, synthetic data
+│   └── orthogonal.py        # PCA weights, orthogonal features, weighted Kendall tau
 # Phase 1 submodules (pandas/numpy, v1 only — pending Phase 2 migration)
-├── fractional_diff/         # Ch. 5 - Fractionally Differentiated Features
 ├── ensemble_methods/        # Ch. 6 - Ensemble Methods
 ├── cross_validation/        # Ch. 7 - Cross-Validation in Finance
-├── feature_importance/      # Ch. 8 - Feature Importance
 ├── hyperparameter_tuning/   # Ch. 9 - Hyper-Parameter Tuning
 ├── bet_sizing/              # Ch. 10 - Bet Sizing
 ├── backtest_dangers/        # Ch. 11 - The Dangers of Backtesting
@@ -125,15 +131,18 @@ src/tradelab/lopezdp_utils/
 ├── backtest_synthetic/      # Ch. 13 - Backtesting on Synthetic Data
 ├── backtest_statistics/     # Ch. 14 - Backtest Statistics
 ├── strategy_risk/           # Ch. 15 - Understanding Strategy Risk
-├── ml_asset_allocation/     # Ch. 16 - Machine Learning Asset Allocation
-├── structural_breaks/       # Ch. 17 - Structural Breaks
-└── entropy_features/        # Ch. 18 - Entropy Features
+└── ml_asset_allocation/     # Ch. 16 - Machine Learning Asset Allocation
 # Deleted (Phase 2 migration):
 # data_structures/           → data/ (merged in session 2)
 # microstructure/            → data/microstructure.py (merged in session 2)
 # hpc/                       → _hpc.py (merged in session 1)
 # labeling/ (old v1 files)   → labeling/ (merged in session 3)
 # sample_weights/            → labeling/sample_weights.py + labeling/class_balance.py (merged in session 3)
+# fractional_diff/           → features/fractional_diff.py (merged in session 4)
+# entropy_features/          → features/entropy.py (merged in session 4)
+# structural_breaks/         → features/structural_breaks.py (merged in session 4)
+# feature_importance/        → features/importance.py + features/orthogonal.py (merged in session 4)
+# data_structures/discretization.py and pca.py → features/entropy.py + features/orthogonal.py (merged in session 4)
 ```
 
 > **Note:** Chapters 1 (intro), 21-22 (quantum/specialized HPC) may not have extractable utilities.

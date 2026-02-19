@@ -41,12 +41,26 @@ from tradelab.lopezdp_utils.labeling import (
     mp_num_co_events, mp_sample_tw, get_ind_matrix, get_avg_uniqueness,
     seq_bootstrap, mp_sample_w, get_time_decay, get_class_weights,
 )
+from tradelab.lopezdp_utils.features import (
+    # fractional differentiation
+    frac_diff_ffd, frac_diff, min_ffd,
+    # entropy
+    shannon_entropy, lempel_ziv_entropy, konto_entropy,
+    encode_binary, encode_quantile, encode_sigma,
+    market_efficiency_metric, mutual_information, variation_of_information,
+    # structural breaks
+    sadf_test, brown_durbin_evans_cusum, chu_stinchcombe_white_cusum,
+    chow_type_dickey_fuller, qadf_test, cadf_test,
+    # feature importance
+    feat_imp_mdi, feat_imp_mda, feat_imp_sfi,
+    cluster_kmeans_top, feat_imp_mdi_clustered, feat_imp_mda_clustered,
+    # orthogonal features
+    get_pca_weights, get_ortho_feats, weighted_kendall_tau,
+)
 
 # Phase 1 (v1) modules — pandas/numpy, not yet migrated
-from tradelab.lopezdp_utils.fractional_diff import ...
 from tradelab.lopezdp_utils.ensemble_methods import ...
 from tradelab.lopezdp_utils.cross_validation import ...
-from tradelab.lopezdp_utils.feature_importance import ...
 from tradelab.lopezdp_utils.hyperparameter_tuning import ...
 from tradelab.lopezdp_utils.bet_sizing import ...
 from tradelab.lopezdp_utils.backtesting_dangers import ...
@@ -55,9 +69,6 @@ from tradelab.lopezdp_utils.backtest_synthetic import ...
 from tradelab.lopezdp_utils.backtest_statistics import ...
 from tradelab.lopezdp_utils.strategy_risk import ...
 from tradelab.lopezdp_utils.ml_asset_allocation import ...
-from tradelab.lopezdp_utils.structural_breaks import ...
-from tradelab.lopezdp_utils.entropy_features import ...
-from tradelab.lopezdp_utils.hpc import ...
 ```
 
 ## Modules
@@ -69,17 +80,20 @@ Each submodule corresponds to a chapter/topic from the books:
 |--------|---------|-------|--------|
 | `data` | Ch 2, 19 | Bars, Sampling, Futures, ETF Trick, Microstructure | ✅ Phase 2 Complete (Polars) |
 | `labeling` | Ch 3, 4 | Triple-Barrier, Meta-Labeling, Sample Weights, Class Balance | ✅ Phase 2 Complete (Polars) |
-| `fractional_diff` | Ch 5 | Fractionally Differentiated Features | ✅ v1 Complete |
 
-### Part 2: Modelling
+### Part 2: Features
+| Module | Chapter | Topic | Status |
+|--------|---------|-------|--------|
+| `features` | Ch 5, 8, 17, 18 + MLAM | Fractional Diff, Entropy, Structural Breaks, Feature Importance, Orthogonal Features | ✅ Phase 2 Complete (Polars I/O) |
+
+### Part 3: Modelling
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
 | `ensemble_methods` | Ch 6 | Ensemble Methods (Bagging, Random Forest) | ✅ v1 Complete |
 | `cross_validation` | Ch 7 | Purged K-Fold Cross-Validation | ✅ v1 Complete |
-| `feature_importance` | Ch 8 | Feature Importance (MDI, MDA, SFI, Clustered) | ✅ v1 Complete |
 | `hyperparameter_tuning` | Ch 9 | Hyper-Parameter Tuning with Purged CV | ✅ v1 Complete |
 
-### Part 3: Backtesting
+### Part 4: Backtesting
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
 | `bet_sizing` | Ch 10 | Bet Sizing (Signal Generation, Dynamic Position Sizing) | ✅ v1 Complete |
@@ -90,11 +104,9 @@ Each submodule corresponds to a chapter/topic from the books:
 | `strategy_risk` | Ch 15 | Understanding Strategy Risk (Binomial Model) | ✅ v1 Complete |
 | `ml_asset_allocation` | Ch 16 | ML Asset Allocation (HRP, Denoising, NCO) | ✅ v1 Complete |
 
-### Part 4: Useful Financial Features
+### Part 5: Market Microstructure
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
-| `structural_breaks` | Ch 17 | Structural Breaks (CUSUM, SADF) | ✅ v1 Complete |
-| `entropy_features` | Ch 18 | Entropy Features (LZ, Kontoyiannis, MI, VI) | ✅ v1 Complete |
 | `data.microstructure` | Ch 19 | Market Microstructure Features | ✅ Phase 2 Complete (merged into `data/`) |
 
 ### Part 5: High-Performance Computing
@@ -542,5 +554,5 @@ Multiprocessing utilities for parallelizing financial ML computations across CPU
 **Key Insight**: Financial ML tasks (labeling, sample weights, feature importance) involve applying the same function to many independent subsets of data. `mp_pandas_obj` automates the partition-dispatch-concatenate pattern. Use `lin_parts` for uniform workloads (row-wise operations) and `nested_parts` for triangular workloads (pairwise computations). Set `num_threads=1` for debugging before scaling up.
 
 > Phase 1 extraction is complete. See `docs/phase1_extraction/TODO.md` for the archived progress log.
-> Phase 2 Sessions 1-3 are complete (`_hpc.py`, `data/`, `labeling/`). See `docs/plans/phase2_migration/` for session plans.
+> Phase 2 Sessions 1-4 are complete (`_hpc.py`, `data/`, `labeling/`, `features/`). See `docs/plans/phase2_migration/` for session plans.
 > `LIBRARY_STANDARDS.md` at the project root documents verified Polars API patterns and pitfalls.
