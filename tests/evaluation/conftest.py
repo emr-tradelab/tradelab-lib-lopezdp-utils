@@ -1,7 +1,6 @@
 """Shared fixtures for evaluation package tests."""
 
 import numpy as np
-import pandas as pd
 import polars as pl
 import pytest
 
@@ -45,13 +44,15 @@ def position_series() -> pl.DataFrame:
         eager=True,
     )[:n]
     # Long, flat, short, flat, long
-    pos = np.concatenate([
-        np.ones(20),      # long
-        np.zeros(10),     # flat
-        -np.ones(25),     # short
-        np.zeros(10),     # flat
-        np.ones(35),      # long
-    ])
+    pos = np.concatenate(
+        [
+            np.ones(20),  # long
+            np.zeros(10),  # flat
+            -np.ones(25),  # short
+            np.zeros(10),  # flat
+            np.ones(35),  # long
+        ]
+    )
     return pl.DataFrame({"timestamp": timestamps, "position": pos})
 
 
@@ -61,12 +62,14 @@ def trial_returns() -> pl.DataFrame:
     np.random.seed(42)
     n_obs = 200
     n_trials = 10
-    data = {"timestamp": pl.datetime_range(
-        pl.datetime(2024, 1, 1),
-        pl.datetime(2024, 7, 18),
-        interval="1d",
-        eager=True,
-    )[:n_obs]}
+    data = {
+        "timestamp": pl.datetime_range(
+            pl.datetime(2024, 1, 1),
+            pl.datetime(2024, 7, 18),
+            interval="1d",
+            eager=True,
+        )[:n_obs]
+    }
     for i in range(n_trials):
         data[f"trial_{i}"] = np.random.randn(n_obs) * 0.01
     return pl.DataFrame(data)

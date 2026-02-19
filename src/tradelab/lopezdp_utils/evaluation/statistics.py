@@ -1,0 +1,326 @@
+"""Backtest statistics — Sharpe, PSR, DSR, drawdown, HHI, bet timing, strategy metrics.
+
+Covers AFML Chapter 14 (SR variants, drawdown, concentration, bet timing)
+and MLAM Section 8 (strategy precision/recall).
+
+References:
+    López de Prado, "Advances in Financial Machine Learning", Chapter 14
+    López de Prado, "Machine Learning for Asset Managers", Section 8
+"""
+
+import numpy as np
+import polars as pl
+from scipy.stats import norm
+
+# ---------------------------------------------------------------------------
+# Sharpe ratio variants (AFML Sections 14.5-14.7)
+# ---------------------------------------------------------------------------
+
+
+def sharpe_ratio(returns: pl.Series, periods_per_year: float = 252.0) -> float:
+    """Compute annualized Sharpe ratio from excess returns.
+
+    Args:
+        returns: Polars Series of excess returns.
+        periods_per_year: Annualization factor (252 for daily, 12 for monthly).
+
+    Returns:
+        Annualized Sharpe ratio.
+    """
+    mu = returns.mean()
+    sigma = returns.std()
+    if sigma is None or sigma == 0 or mu is None:
+        return 0.0
+    return float((mu / sigma) * np.sqrt(periods_per_year))
+
+
+def probabilistic_sharpe_ratio(
+    observed_sr: float,
+    benchmark_sr: float = 0.0,
+    n_obs: int = 252,
+    skew: float = 0.0,
+    kurtosis: float = 3.0,
+) -> float:
+    """Compute Probabilistic Sharpe Ratio (PSR).
+
+    Args:
+        observed_sr: Observed (non-annualized) Sharpe ratio.
+        benchmark_sr: Benchmark SR to test against (often 0).
+        n_obs: Number of return observations.
+        skew: Skewness of returns (0 for Gaussian).
+        kurtosis: Kurtosis of returns (3 for Gaussian).
+
+    Returns:
+        PSR as a probability in [0, 1].
+
+    Reference:
+        AFML Section 14.6
+    """
+    z = (observed_sr - benchmark_sr) * np.sqrt(n_obs - 1)
+    z /= np.sqrt(1 - skew * observed_sr + (kurtosis - 1) / 4.0 * observed_sr**2)
+    return float(norm.cdf(z))
+
+
+def deflated_sharpe_ratio(
+    observed_sr: float,
+    sr_estimates: list[float],
+    n_obs: int = 252,
+    skew: float = 0.0,
+    kurtosis: float = 3.0,
+) -> float:
+    """Compute Deflated Sharpe Ratio (DSR).
+
+    Corrects the observed SR for selection bias under multiple testing.
+    Uses the expected maximum SR across N trials as the benchmark for PSR.
+
+    Args:
+        observed_sr: Observed (non-annualized) Sharpe ratio of best strategy.
+        sr_estimates: List of Sharpe ratios from all backtesting trials.
+            No default — caller must provide explicit trial accounting.
+        n_obs: Number of return observations per trial.
+        skew: Skewness of returns.
+        kurtosis: Kurtosis of returns.
+
+    Returns:
+        DSR as a probability in [0, 1].
+
+    Reference:
+        AFML Section 14.7
+    """
+    n_trials = len(sr_estimates)
+    sr_std = float(np.std(sr_estimates, ddof=1))
+
+    euler_mascheroni = 0.5772156649015329
+    sr_max = sr_std * (
+        (1 - euler_mascheroni) * norm.ppf(1 - 1.0 / n_trials)
+        + euler_mascheroni * norm.ppf(1 - 1.0 / (n_trials * np.e))
+    )
+
+    return probabilistic_sharpe_ratio(
+        observed_sr=observed_sr,
+        benchmark_sr=sr_max,
+        n_obs=n_obs,
+        skew=skew,
+        kurtosis=kurtosis,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Drawdown and time-under-water (AFML Snippet 14.4)
+# ---------------------------------------------------------------------------
+
+
+def compute_dd_tuw(
+    series: pl.DataFrame, dollars: bool = False
+) -> tuple[pl.DataFrame, pl.DataFrame]:
+    """Compute drawdown series and time-under-water.
+
+    Args:
+        series: DataFrame with 'timestamp' and 'pnl' columns.
+        dollars: If True, DD in dollar terms. If False, in percentage terms.
+
+    Returns:
+        Tuple of (dd, tuw) DataFrames.
+    """
+    timestamps = series["timestamp"].to_list()
+    pnl = series["pnl"].to_numpy()
+
+    # Compute high-watermark
+    hwm = np.maximum.accumulate(pnl)
+
+    # Find HWM episodes: group consecutive rows by their HWM value
+    # For each unique HWM, find the min PnL and the timestamp of the HWM
+    dd_timestamps = []
+    dd_values = []
+
+    # Get unique HWM values in order of first appearance
+    seen = set()
+    hwm_first_idx = []
+    for i, h in enumerate(hwm):
+        if h not in seen:
+            seen.add(h)
+            hwm_first_idx.append(i)
+
+    for idx in hwm_first_idx:
+        h = hwm[idx]
+        # Find all rows with this HWM
+        mask = hwm == h
+        min_pnl = pnl[mask].min()
+        if h > min_pnl:
+            if dollars:
+                dd_val = h - min_pnl
+            else:
+                dd_val = 1 - min_pnl / h
+            dd_timestamps.append(timestamps[idx])
+            dd_values.append(dd_val)
+
+    dd_pl = pl.DataFrame({"timestamp": dd_timestamps, "drawdown": dd_values})
+
+    # Time under water: time between consecutive HWM timestamps
+    if len(dd_timestamps) > 1:
+        tuw_ts = []
+        tuw_vals = []
+        for i in range(len(dd_timestamps) - 1):
+            dt = (dd_timestamps[i + 1] - dd_timestamps[i]) / np.timedelta64(1, "D") / 365.25
+            tuw_ts.append(dd_timestamps[i])
+            tuw_vals.append(float(dt))
+        tuw_pl = pl.DataFrame({"timestamp": tuw_ts, "tuw_years": tuw_vals})
+    else:
+        tuw_pl = pl.DataFrame(schema={"timestamp": pl.Datetime, "tuw_years": pl.Float64})
+
+    return dd_pl, tuw_pl
+
+
+# ---------------------------------------------------------------------------
+# Concentration — HHI (AFML Snippet 14.3)
+# ---------------------------------------------------------------------------
+
+
+def get_hhi(bet_ret: pl.Series) -> float:
+    """Compute normalized Herfindahl-Hirschman Index for return concentration.
+
+    Args:
+        bet_ret: Series of returns from bets.
+
+    Returns:
+        Normalized HHI between 0 (diversified) and 1 (concentrated).
+    """
+    n = len(bet_ret)
+    if n <= 2:
+        return float("nan")
+
+    total = bet_ret.abs().sum()
+    if total == 0:
+        return float("nan")
+
+    wght = bet_ret.abs() / total
+    hhi = (wght**2).sum()
+    hhi = (hhi - 1.0 / n) / (1.0 - 1.0 / n)
+    return float(hhi)
+
+
+# ---------------------------------------------------------------------------
+# Bet timing and holding period (AFML Snippets 14.1, 14.2)
+# ---------------------------------------------------------------------------
+
+
+def get_bet_timing(t_pos: pl.DataFrame) -> pl.DataFrame:
+    """Derive timestamps of independent bets from a position series.
+
+    Args:
+        t_pos: DataFrame with 'timestamp' and 'position' columns.
+
+    Returns:
+        DataFrame with 'timestamp' column of bet boundary timestamps.
+    """
+    timestamps = t_pos["timestamp"].to_list()
+    pos = t_pos["position"].to_numpy()
+
+    bet_times = []
+
+    for i in range(1, len(pos)):
+        if pos[i] == 0 and pos[i - 1] != 0:
+            bet_times.append(timestamps[i])
+        elif pos[i] * pos[i - 1] < 0:
+            bet_times.append(timestamps[i])
+
+    # Always include last timestamp
+    if not bet_times or bet_times[-1] != timestamps[-1]:
+        bet_times.append(timestamps[-1])
+
+    return pl.DataFrame({"timestamp": sorted(set(bet_times))})
+
+
+def get_holding_period(t_pos: pl.DataFrame) -> float:
+    """Estimate average holding period from a position series.
+
+    Args:
+        t_pos: DataFrame with 'timestamp' and 'position' columns.
+
+    Returns:
+        Average holding period in days.
+    """
+    ts_series = t_pos["timestamp"]
+    pos = t_pos["position"].to_numpy().astype(float)
+
+    # Compute day offsets from first timestamp
+    ms_per_day = 1000 * 60 * 60 * 24
+    t_diff_series = (ts_series - ts_series[0]).cast(
+        pl.Duration("ms")
+    ).dt.total_milliseconds() / ms_per_day
+    t_diff = t_diff_series.to_numpy()
+    t_entry = 0.0
+
+    hp_dt = []
+    hp_w = []
+
+    for i in range(1, len(pos)):
+        p_d = pos[i] - pos[i - 1]
+        if p_d * pos[i - 1] >= 0:  # Increased or unchanged
+            if pos[i] != 0:
+                t_entry = (t_entry * pos[i - 1] + t_diff[i] * p_d) / pos[i]
+        else:  # Decreased
+            if pos[i] * pos[i - 1] < 0:  # Flip
+                hp_dt.append(t_diff[i] - t_entry)
+                hp_w.append(abs(pos[i - 1]))
+                t_entry = t_diff[i]
+            else:  # Scaled out
+                hp_dt.append(t_diff[i] - t_entry)
+                hp_w.append(abs(p_d))
+
+    total_w = sum(hp_w)
+    if total_w > 0:
+        return float(sum(d * w for d, w in zip(hp_dt, hp_w)) / total_w)
+    return float("nan")
+
+
+# ---------------------------------------------------------------------------
+# Strategy precision / recall (MLAM Section 8)
+# ---------------------------------------------------------------------------
+
+
+def strategy_precision(alpha: float, beta: float, theta: float) -> float:
+    """Compute precision of strategy discovery process.
+
+    Args:
+        alpha: Significance level (Type I error probability).
+        beta: Type II error probability.
+        theta: Universe odds ratio s_T / s_F.
+
+    Returns:
+        Precision in [0, 1].
+    """
+    return ((1 - beta) * theta) / ((1 - beta) * theta + alpha)
+
+
+def strategy_recall(beta: float) -> float:
+    """Compute recall of strategy discovery process.
+
+    Args:
+        beta: Type II error probability.
+
+    Returns:
+        Recall (1 - beta) in [0, 1].
+    """
+    return 1 - beta
+
+
+def multi_test_precision_recall(
+    alpha: float, beta: float, theta: float, k: int
+) -> tuple[float, float]:
+    """Extend precision/recall to K independent trials with Sidak correction.
+
+    Args:
+        alpha: Per-trial significance level.
+        beta: Per-trial Type II error probability.
+        theta: Universe odds ratio s_T / s_F.
+        k: Number of independent trials.
+
+    Returns:
+        Tuple of (precision_K, recall_K).
+    """
+    alpha_k = 1 - (1 - alpha) ** k
+    beta_k = beta**k
+    precision_k = ((1 - beta_k) * theta) / ((1 - beta_k) * theta + alpha_k)
+    recall_k = 1 - beta_k
+    return precision_k, recall_k
