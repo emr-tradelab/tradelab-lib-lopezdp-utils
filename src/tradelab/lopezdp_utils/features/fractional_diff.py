@@ -22,7 +22,6 @@ import numpy as np
 import polars as pl
 from statsmodels.tsa.stattools import adfuller
 
-
 # ---------------------------------------------------------------------------
 # Weight generation
 # ---------------------------------------------------------------------------
@@ -268,7 +267,6 @@ def plot_weights(
     Reference:
         AFML Snippet 5.1 (plotWeights)
     """
-    import matplotlib.pyplot as plt
     import pandas as pd
 
     w = pd.DataFrame()

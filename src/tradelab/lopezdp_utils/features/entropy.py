@@ -21,7 +21,6 @@ import scipy.stats as ss
 from numpy.typing import NDArray
 from sklearn.metrics import mutual_info_score
 
-
 # ===========================================================================
 # Entropy estimators (pure string operations)
 # ===========================================================================

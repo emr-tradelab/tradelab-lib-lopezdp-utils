@@ -1,8 +1,6 @@
 """Integration tests: features pipeline."""
 
-import numpy as np
 import polars as pl
-import pytest
 
 
 class TestFracdiffToStationarity:

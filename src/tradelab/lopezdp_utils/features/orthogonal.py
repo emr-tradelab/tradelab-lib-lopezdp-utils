@@ -34,7 +34,7 @@ def pca_weights(
         cov: Covariance matrix of assets (symmetric). Shape: (N, N).
         risk_dist: Desired distribution of risks across principal components.
             Shape: (N,). Defaults to allocating 100% to the smallest eigenvalue.
-        risk_target: Target total portfolio risk (σ). Default 1.0.
+        risk_target: Target total portfolio risk (sigma). Default 1.0.
 
     Returns:
         Portfolio weights as a column vector. Shape: (N, 1).

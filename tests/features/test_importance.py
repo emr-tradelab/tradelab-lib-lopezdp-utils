@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 from sklearn.ensemble import RandomForestClassifier
 
 
@@ -30,10 +29,11 @@ class TestFeatImpMDI:
 
 class TestFeatImpMDA:
     def test_returns_dataframe_and_score(self, synthetic_features):
-        from tradelab.lopezdp_utils.features.importance import feat_imp_mda
         from sklearn.model_selection import KFold
 
-        X, y, feat_names = synthetic_features
+        from tradelab.lopezdp_utils.features.importance import feat_imp_mda
+
+        X, y, _feat_names = synthetic_features
         clf = RandomForestClassifier(n_estimators=50, random_state=42)
         cv = KFold(n_splits=3)
         result, score = feat_imp_mda(

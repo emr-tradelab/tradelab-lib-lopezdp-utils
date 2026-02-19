@@ -39,7 +39,6 @@ def return_series() -> pl.Series:
 def explosive_series() -> pl.DataFrame:
     """Price series with an explosive (bubble) regime for SADF tests."""
     np.random.seed(42)
-    n = 300
     timestamps = pl.datetime_range(
         pl.datetime(2024, 1, 1),
         pl.datetime(2024, 1, 1, 4, 59),

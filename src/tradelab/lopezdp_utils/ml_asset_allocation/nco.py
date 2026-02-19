@@ -11,10 +11,10 @@ Reference: ML for Asset Managers, Snippets 7.3–7.6.
 
 import numpy as np
 import pandas as pd
-
 from tradelab.lopezdp_utils.feature_importance.clustering import (
     cluster_kmeans_base,
 )
+
 from tradelab.lopezdp_utils.ml_asset_allocation.denoising import (
     _cov2corr,
 )

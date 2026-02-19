@@ -1,8 +1,6 @@
 """Tests for features.entropy."""
 
 import numpy as np
-import polars as pl
-import pytest
 
 
 class TestPlugIn:
@@ -187,9 +185,9 @@ class TestKLDivergence:
 
 class TestCrossEntropy:
     def test_cross_entropy_geq_entropy(self):
-        from tradelab.lopezdp_utils.features.entropy import cross_entropy
-
         import scipy.stats as ss
+
+        from tradelab.lopezdp_utils.features.entropy import cross_entropy
 
         p = np.array([0.3, 0.7])
         q = np.array([0.5, 0.5])

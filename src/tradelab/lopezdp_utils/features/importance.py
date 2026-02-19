@@ -26,7 +26,6 @@ from sklearn.tree import DecisionTreeClassifier
 
 from tradelab.lopezdp_utils.cross_validation import PurgedKFold, cv_score
 
-
 # ---------------------------------------------------------------------------
 # MDI — Mean Decrease Impurity
 # ---------------------------------------------------------------------------

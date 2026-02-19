@@ -59,7 +59,7 @@ from tradelab.lopezdp_utils.features.structural_breaks import (
     sadf_test,
 )
 
-__all__ = [
+__all__ = [  # noqa: RUF022
     # Fractional differentiation
     "get_weights",
     "get_weights_ffd",

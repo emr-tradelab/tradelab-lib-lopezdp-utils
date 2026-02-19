@@ -7,8 +7,8 @@
 | Session 1 | `_hpc.py` | ✅ Complete |
 | Session 2 | `data/` | ✅ Complete |
 | Session 3 | `labeling/` | ✅ Complete |
-| Session 4 | `features/` | ⏳ Pending |
-| Session 5 | `cross_validation/` | ⏳ Pending |
+| Session 4 | `features/` | 📋 Planned |
+| Session 5 | `modeling/` | 📋 Planned |
 | Session 6 | `evaluation/` | ⏳ Pending |
 | Session 7 | `backtest/` | ⏳ Pending |
 
