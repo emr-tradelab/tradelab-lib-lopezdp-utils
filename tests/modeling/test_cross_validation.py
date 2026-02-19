@@ -48,12 +48,11 @@ class TestPurgedKFold:
     def test_no_leakage(self, classification_data):
         from tradelab.lopezdp_utils.modeling.cross_validation import PurgedKFold
 
-        X, y, t1 = classification_data
+        X, _y, t1 = classification_data
         pkf = PurgedKFold(n_splits=3, t1=t1, pct_embargo=0.01)
         for train_idx, test_idx in pkf.split(X):
             train_times = t1.iloc[train_idx]
             test_start = X.index[test_idx].min()
-            test_end = X.index[test_idx].max()
             # No train observation's label should strictly overlap with test period
             # (t1 == test_start is allowed — label ends exactly as test begins)
             assert not any(
@@ -63,7 +62,7 @@ class TestPurgedKFold:
     def test_correct_number_of_splits(self, classification_data):
         from tradelab.lopezdp_utils.modeling.cross_validation import PurgedKFold
 
-        X, y, t1 = classification_data
+        X, _y, t1 = classification_data
         pkf = PurgedKFold(n_splits=5, t1=t1, pct_embargo=0.0)
         splits = list(pkf.split(X))
         assert len(splits) == 5
@@ -71,7 +70,7 @@ class TestPurgedKFold:
     def test_raises_without_t1(self, classification_data):
         from tradelab.lopezdp_utils.modeling.cross_validation import PurgedKFold
 
-        X, y, _ = classification_data
+        X, _y, _ = classification_data
         with pytest.raises((ValueError, TypeError)):
             pkf = PurgedKFold(n_splits=3, t1=None)
             list(pkf.split(X))
@@ -80,7 +79,7 @@ class TestPurgedKFold:
         """Every observation should appear in exactly one test fold."""
         from tradelab.lopezdp_utils.modeling.cross_validation import PurgedKFold
 
-        X, y, t1 = classification_data
+        X, _y, t1 = classification_data
         pkf = PurgedKFold(n_splits=3, t1=t1)
         all_test = []
         for _, test_idx in pkf.split(X):

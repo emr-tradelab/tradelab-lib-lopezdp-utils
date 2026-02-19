@@ -1,8 +1,6 @@
 """Tests for modeling.hyperparameter_tuning."""
 
 import numpy as np
-import pandas as pd
-import pytest
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -34,7 +32,7 @@ class TestMyPipeline:
     def test_propagates_sample_weight(self, classification_data):
         from tradelab.lopezdp_utils.modeling.hyperparameter_tuning import MyPipeline
 
-        X, y, t1 = classification_data
+        X, y, _t1 = classification_data
         pipe = MyPipeline([
             ("scaler", StandardScaler()),
             ("clf", RandomForestClassifier(n_estimators=10, random_state=42)),
@@ -70,7 +68,6 @@ class TestClfHyperFit:
     def test_with_randomized_search(self, classification_data):
         from tradelab.lopezdp_utils.modeling.hyperparameter_tuning import (
             clf_hyper_fit,
-            log_uniform,
         )
 
         X, y, t1 = classification_data

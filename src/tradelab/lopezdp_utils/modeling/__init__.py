@@ -32,18 +32,15 @@ from tradelab.lopezdp_utils.modeling.hyperparameter_tuning import (
 )
 
 __all__ = [
-    # Cross-validation
-    "PurgedKFold",
-    "cv_score",
-    "get_train_times",
-    "get_embargo_times",
-    "probability_weighted_accuracy",
-    # Ensembles
-    "bagging_accuracy",
-    "build_random_forest",
-    "bagging_classifier_factory",
-    # Hyperparameter tuning
-    "log_uniform",
     "MyPipeline",
+    "PurgedKFold",
+    "bagging_accuracy",
+    "bagging_classifier_factory",
+    "build_random_forest",
     "clf_hyper_fit",
+    "cv_score",
+    "get_embargo_times",
+    "get_train_times",
+    "log_uniform",
+    "probability_weighted_accuracy",
 ]

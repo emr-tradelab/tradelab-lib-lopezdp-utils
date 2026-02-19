@@ -38,5 +38,5 @@ def classification_data() -> tuple:
 @pytest.fixture
 def sample_weights(classification_data) -> pd.Series:
     """Uniform sample weights for testing."""
-    X, y, t1 = classification_data
+    _X, y, _t1 = classification_data
     return pd.Series(np.ones(len(y)), index=y.index, name="weight")

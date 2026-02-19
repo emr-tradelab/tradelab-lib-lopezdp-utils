@@ -1,8 +1,6 @@
 """Integration tests: modeling pipeline."""
 
 import numpy as np
-import pandas as pd
-import pytest
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -12,7 +10,7 @@ class TestPurgedCVPipeline:
     """End-to-end: PurgedKFold → cv_score → hyperparameter tuning."""
 
     def test_cv_score_with_purged_kfold(self, classification_data, sample_weights):
-        from tradelab.lopezdp_utils.modeling import PurgedKFold, cv_score
+        from tradelab.lopezdp_utils.modeling import cv_score
 
         X, y, t1 = classification_data
         clf = RandomForestClassifier(n_estimators=20, random_state=42)

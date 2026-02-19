@@ -1,6 +1,5 @@
 """Tests for modeling.ensemble — bagging accuracy, RF builders."""
 
-import numpy as np
 import pytest
 from sklearn.ensemble import BaggingClassifier, RandomForestClassifier
 
@@ -47,8 +46,9 @@ class TestBuildRandomForest:
 
 class TestBaggingClassifierFactory:
     def test_returns_bagging_classifier(self):
-        from tradelab.lopezdp_utils.modeling.ensemble import bagging_classifier_factory
         from sklearn.tree import DecisionTreeClassifier
+
+        from tradelab.lopezdp_utils.modeling.ensemble import bagging_classifier_factory
 
         clf = bagging_classifier_factory(
             base_estimator=DecisionTreeClassifier(),
