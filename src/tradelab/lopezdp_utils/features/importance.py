@@ -24,7 +24,7 @@ from sklearn.ensemble import BaggingClassifier
 from sklearn.metrics import accuracy_score, log_loss, silhouette_samples
 from sklearn.tree import DecisionTreeClassifier
 
-from tradelab.lopezdp_utils.cross_validation import PurgedKFold, cv_score
+from tradelab.lopezdp_utils.modeling.cross_validation import PurgedKFold, cv_score
 
 # ---------------------------------------------------------------------------
 # MDI — Mean Decrease Impurity
