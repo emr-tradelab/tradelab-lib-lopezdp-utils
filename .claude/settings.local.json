@@ -18,11 +18,11 @@
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "context7"
+    "context7",
+    "notebooklm"
   ],
   "disabledMcpServers": [
     "github",
-    "trello",
-    "notebooklm"
+    "trello"
   ]
 }

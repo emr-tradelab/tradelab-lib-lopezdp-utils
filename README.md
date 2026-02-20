@@ -58,10 +58,14 @@ from tradelab.lopezdp_utils.features import (
     get_pca_weights, get_ortho_feats, weighted_kendall_tau,
 )
 
+# Phase 2 (production) modules — sklearn-native (no Polars migration; sklearn/pandas/numpy throughout)
+from tradelab.lopezdp_utils.modeling import (
+    PurgedKFold, cv_score, get_train_times, get_embargo_times, probability_weighted_accuracy,
+    bagging_accuracy, build_random_forest, bagging_classifier_factory,
+    log_uniform, MyPipeline, clf_hyper_fit,
+)
+
 # Phase 1 (v1) modules — pandas/numpy, not yet migrated
-from tradelab.lopezdp_utils.ensemble_methods import ...
-from tradelab.lopezdp_utils.cross_validation import ...
-from tradelab.lopezdp_utils.hyperparameter_tuning import ...
 from tradelab.lopezdp_utils.bet_sizing import ...
 from tradelab.lopezdp_utils.backtesting_dangers import ...
 from tradelab.lopezdp_utils.backtest_cv import ...
@@ -89,9 +93,7 @@ Each submodule corresponds to a chapter/topic from the books:
 ### Part 3: Modelling
 | Module | Chapter | Topic | Status |
 |--------|---------|-------|--------|
-| `ensemble_methods` | Ch 6 | Ensemble Methods (Bagging, Random Forest) | ✅ v1 Complete |
-| `cross_validation` | Ch 7 | Purged K-Fold Cross-Validation | ✅ v1 Complete |
-| `hyperparameter_tuning` | Ch 9 | Hyper-Parameter Tuning with Purged CV | ✅ v1 Complete |
+| `modeling` | Ch 6, 7, 9 | Ensemble Methods, Purged CV, Hyper-Parameter Tuning | ✅ Phase 2 Complete (sklearn-native) |
 
 ### Part 4: Backtesting
 | Module | Chapter | Topic | Status |
@@ -229,7 +231,17 @@ Solving the stationarity vs. memory trade-off: standard differentiation (d=1, i.
 
 **Key Insight**: For liquid instruments, d* ≈ 0.35 achieves stationarity with correlation > 0.99 to the original series, far superior to log-returns (d=1, correlation ≈ 0).
 
+### `modeling` — Chapters 6, 7 & 9: Ensemble Methods, Cross-Validation, Hyper-Parameter Tuning (Phase 2)
+
+> **Status:** Phase 2 complete. sklearn-native throughout (no Polars migration). 26 tests. 12 public exports.
+> Replaces `ensemble_methods/`, `cross_validation/`, and `hyperparameter_tuning/` (all deleted).
+> Import via `from tradelab.lopezdp_utils.modeling import ...`
+
+---
+
 ### `ensemble_methods` — Chapter 6: Ensemble Methods
+
+> **Phase 2:** Merged into `modeling/ensemble.py`. See `modeling` section above.
 
 Ensemble classifiers adapted for non-IID financial data, where overlapping labels and low signal-to-noise ratios make standard implementations suboptimal.
 
@@ -248,6 +260,8 @@ Ensemble classifiers adapted for non-IID financial data, where overlapping label
 **Key Insight**: Methods 1 and 2 are recommended for financial data because they set `max_samples` to average uniqueness (from Ch.4), preventing trees from oversampling redundant overlapping observations.
 
 ### `cross_validation` — Chapter 7: Cross-Validation in Finance
+
+> **Phase 2:** Merged into `modeling/cross_validation.py`. See `modeling` section above.
 
 Time-aware cross-validation that prevents information leakage from overlapping financial labels. Standard k-fold CV assumes IID observations, which is violated when labels span time intervals.
 
@@ -298,6 +312,8 @@ Framework for understanding which variables drive model performance. López de P
 **Key Insight**: MDI is biased and in-sample; MDA and SFI are OOS but susceptible to substitution effects. Clustered Feature Importance (MLAM) solves this by grouping correlated features via ONC and measuring importance at the cluster level.
 
 ### `hyperparameter_tuning` — Chapter 9: Hyper-Parameter Tuning with Cross-Validation
+
+> **Phase 2:** Merged into `modeling/hyperparameter_tuning.py`. See `modeling` section above.
 
 Financial-aware hyperparameter optimization using purged k-fold CV to prevent leakage during model selection.
 
@@ -554,5 +570,5 @@ Multiprocessing utilities for parallelizing financial ML computations across CPU
 **Key Insight**: Financial ML tasks (labeling, sample weights, feature importance) involve applying the same function to many independent subsets of data. `mp_pandas_obj` automates the partition-dispatch-concatenate pattern. Use `lin_parts` for uniform workloads (row-wise operations) and `nested_parts` for triangular workloads (pairwise computations). Set `num_threads=1` for debugging before scaling up.
 
 > Phase 1 extraction is complete. See `docs/phase1_extraction/TODO.md` for the archived progress log.
-> Phase 2 Sessions 1-4 are complete (`_hpc.py`, `data/`, `labeling/`, `features/`). See `docs/plans/phase2_migration/` for session plans.
+> Phase 2 Sessions 1-5 are complete (`_hpc.py`, `data/`, `labeling/`, `features/`, `modeling/`). See `docs/plans/phase2_migration/` for session plans.
 > `LIBRARY_STANDARDS.md` at the project root documents verified Polars API patterns and pitfalls.

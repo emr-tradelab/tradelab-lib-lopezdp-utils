@@ -54,7 +54,8 @@ Convert all v1 code into production-grade, high-performance library code.
 - Session 2 (`data/`): ✅ Complete — merged to `main`, 61 tests passing
 - Session 3 (`labeling/`): ✅ Complete — merged to `main`, 96 tests passing
 - Session 4 (`features/`): ✅ Complete — merged to `main`, 150 tests passing
-- Sessions 5-7: pending
+- Session 5 (`modeling/`): ✅ Complete — merged to `main`, 176 tests passing
+- Sessions 6-7: pending
 - See `docs/plans/phase2_migration/` for detailed session plans
 
 ---
