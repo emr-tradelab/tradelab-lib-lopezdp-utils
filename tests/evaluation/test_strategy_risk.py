@@ -80,3 +80,26 @@ class TestProbFailure:
         result = prob_failure(ret, freq=252, target_sr=1.0)
         assert isinstance(result, float)
         assert 0 <= result <= 1
+
+    def test_all_positive_returns_nan(self):
+        from tradelab.lopezdp_utils.evaluation.strategy_risk import prob_failure
+
+        ret = pl.Series("ret", [0.01] * 100)
+        result = prob_failure(ret, freq=252, target_sr=1.0)
+        assert np.isnan(result)
+
+    def test_all_negative_returns_nan(self):
+        from tradelab.lopezdp_utils.evaluation.strategy_risk import prob_failure
+
+        ret = pl.Series("ret", [-0.01] * 100)
+        result = prob_failure(ret, freq=252, target_sr=1.0)
+        assert np.isnan(result)
+
+
+class TestMixGaussiansReproducibility:
+    def test_seed_reproducible(self):
+        from tradelab.lopezdp_utils.evaluation.strategy_risk import mix_gaussians
+
+        r1 = mix_gaussians(0, 1, 0.5, 0.5, 0.5, 100, seed=42)
+        r2 = mix_gaussians(0, 1, 0.5, 0.5, 0.5, 100, seed=42)
+        np.testing.assert_array_equal(r1, r2)

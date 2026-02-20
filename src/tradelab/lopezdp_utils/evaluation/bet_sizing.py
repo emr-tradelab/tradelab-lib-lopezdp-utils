@@ -78,6 +78,7 @@ def get_signal(
 
 
 def avg_active_signals(signals: pl.DataFrame) -> pl.DataFrame:
+    # TODO: vectorize with Polars cross-join for large inputs
     """Compute average signal among concurrently active bets.
 
     Args:
@@ -187,6 +188,8 @@ def limit_price(t_pos: int, pos: int, f: float, w: float, max_pos: int) -> float
     Returns:
         Average limit price for the order.
     """
+    if t_pos == pos:
+        return f
     sgn = 1 if t_pos >= pos else -1
     l_p = 0.0
     for j in range(abs(pos + sgn), abs(t_pos) + 1):
@@ -206,3 +209,67 @@ def get_w(x: float, m: float) -> float:
         Width coefficient omega.
     """
     return x**2 * (m ** (-2) - 1)
+
+
+# ---------------------------------------------------------------------------
+# Strategy-independent sizing (AFML Snippet 10.1 variant)
+# ---------------------------------------------------------------------------
+
+
+def bet_size_mixture(
+    concurrent_counts: pl.Series,
+    mu1: float,
+    mu2: float,
+    sigma1: float,
+    sigma2: float,
+    prob1: float,
+) -> pl.Series:
+    """Size bets via CDF of a fitted mixture of two Gaussians.
+
+    Strategy-independent approach: fit a mixture model to the distribution
+    of concurrent bet counts, then use the CDF to derive sizing.
+
+    Args:
+        concurrent_counts: Series of net concurrent bet counts (c_t = c_long - c_short).
+        mu1: Mean of the first Gaussian component.
+        mu2: Mean of the second Gaussian component.
+        sigma1: Std of the first Gaussian component.
+        sigma2: Std of the second Gaussian component.
+        prob1: Mixing weight for the first component (0 < prob1 < 1).
+
+    Returns:
+        Polars Series of bet sizes in (-1, 1).
+    """
+    c = concurrent_counts.to_numpy().astype(float)
+    # Mixture CDF: F(x) = prob1 * Phi((x-mu1)/sigma1) + (1-prob1) * Phi((x-mu2)/sigma2)
+    cdf_vals = prob1 * norm.cdf(c, mu1, sigma1) + (1 - prob1) * norm.cdf(c, mu2, sigma2)
+    # Map [0, 1] → (-1, 1): m = 2*F(c) - 1 for c >= 0, -(1 - 2*F(c)) for c < 0
+    sizes = np.where(c >= 0, 2 * cdf_vals - 1, -(1 - 2 * cdf_vals))
+    return pl.Series(concurrent_counts.name, np.clip(sizes, -1, 1))
+
+
+# ---------------------------------------------------------------------------
+# Ensemble sizing (AFML Section 10.3)
+# ---------------------------------------------------------------------------
+
+
+def bet_size_ensemble(avg_prob: float, n_classifiers: int) -> float:
+    """Size bet from ensemble of n meta-labeling classifiers via Student-t.
+
+    Args:
+        avg_prob: Average predicted probability across n classifiers.
+        n_classifiers: Number of classifiers in the ensemble.
+
+    Returns:
+        Bet size in (-1, 1).
+    """
+    from scipy.stats import t as t_dist
+
+    if n_classifiers < 2:
+        raise ValueError("Need at least 2 classifiers for ensemble sizing")
+    se = (avg_prob * (1 - avg_prob) / n_classifiers) ** 0.5
+    if se == 0:
+        return 0.0
+    t_stat = (avg_prob - 0.5) / se
+    df = n_classifiers - 1
+    return float(2 * t_dist.cdf(t_stat, df) - 1)

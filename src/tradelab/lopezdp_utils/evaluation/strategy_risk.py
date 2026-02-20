@@ -93,6 +93,7 @@ def mix_gaussians(
     sigma2: float,
     prob1: float,
     n_obs: int,
+    seed: int | None = None,
 ) -> np.ndarray:
     """Generate random draws from a mixture of two Gaussians.
 
@@ -103,14 +104,17 @@ def mix_gaussians(
         sigma2: Std of the second component.
         prob1: Mixing probability for the first component.
         n_obs: Total number of observations.
+        seed: Random seed for reproducibility.
 
     Returns:
         Array of shuffled random draws.
     """
-    ret1 = np.random.normal(mu1, sigma1, size=int(n_obs * prob1))
-    ret2 = np.random.normal(mu2, sigma2, size=int(n_obs) - ret1.shape[0])
+    rng = np.random.default_rng(seed)
+    n1 = int(n_obs * prob1)
+    ret1 = rng.normal(mu1, sigma1, size=n1)
+    ret2 = rng.normal(mu2, sigma2, size=int(n_obs) - n1)
     ret = np.append(ret1, ret2, axis=0)
-    np.random.shuffle(ret)
+    rng.shuffle(ret)
     return ret
 
 
@@ -126,9 +130,15 @@ def prob_failure(ret: pl.Series, freq: float, target_sr: float) -> float:
         Probability of strategy failure (0 to 1).
     """
     r = ret.to_numpy()
-    r_pos = r[r > 0].mean()
-    r_neg = r[r <= 0].mean()
-    p = r[r > 0].shape[0] / float(r.shape[0])
+    pos_mask = r > 0
+    neg_mask = r <= 0
+    if pos_mask.sum() == 0 or neg_mask.sum() == 0:
+        return float("nan")
+    r_pos = r[pos_mask].mean()
+    r_neg = r[neg_mask].mean()
+    p = pos_mask.sum() / float(r.shape[0])
+    if p == 0 or p == 1:
+        return float("nan")
     thres_p = bin_hr(r_neg, r_pos, freq, target_sr)
     risk = ss.norm.cdf(thres_p, p, (p * (1.0 - p) / freq) ** 0.5)
     return float(risk)

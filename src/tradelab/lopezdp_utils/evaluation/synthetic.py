@@ -4,8 +4,8 @@ References:
     López de Prado, "Advances in Financial Machine Learning", Chapter 13
 """
 
+import random
 from itertools import product
-from random import gauss
 
 import numpy as np
 import polars as pl
@@ -58,7 +58,8 @@ def otr_batch(
     max_hp: int = 100,
     r_pt: np.ndarray | None = None,
     r_slm: np.ndarray | None = None,
-    seed: float = 0,
+    p0: float = 0,
+    rng_seed: int | None = None,
 ) -> pl.DataFrame:
     """Monte Carlo simulation of trading rules under the O-U process.
 
@@ -68,7 +69,8 @@ def otr_batch(
         max_hp: Maximum holding period (vertical barrier).
         r_pt: Array of profit-taking thresholds.
         r_slm: Array of stop-loss thresholds.
-        seed: Initial price level P_0.
+        p0: Initial price level P_0.
+        rng_seed: Seed for reproducible random number generation.
 
     Returns:
         Polars DataFrame with columns: 'r_pt', 'r_slm', 'mean_pnl', 'std_pnl', 'sharpe'.
@@ -78,17 +80,18 @@ def otr_batch(
     if r_slm is None:
         r_slm = np.linspace(0.5, 10, 20)
 
+    rng = random.Random(rng_seed)
     phi = 2 ** (-1.0 / coeffs["hl"])
     results = []
 
     for pt, sl in product(r_pt, r_slm):
         pnls = []
         for _ in range(n_iter):
-            p = seed
+            p = p0
             hp = 0
             while True:
-                p = (1 - phi) * coeffs["forecast"] + phi * p + coeffs["sigma"] * gauss(0, 1)
-                cp = p - seed
+                p = (1 - phi) * coeffs["forecast"] + phi * p + coeffs["sigma"] * rng.gauss(0, 1)
+                cp = p - p0
                 hp += 1
                 if cp > pt or cp < -sl or hp > max_hp:
                     pnls.append(cp)
@@ -116,15 +119,17 @@ def otr_main(
     sigma: float = 1,
     n_iter: int = 100_000,
     max_hp: int = 100,
+    rng_seed: int | None = None,
 ) -> dict[tuple[float, float], pl.DataFrame]:
     """Run OTR experiment across market regimes.
 
     Args:
         forecasts: List of forecast price levels.
-        half_lives: List of half-lives.
+        half_lives: List of half-lives. Defaults to [5, 10, 25, 50, 100] per book.
         sigma: Process volatility.
         n_iter: Number of Monte Carlo paths per rule per regime.
         max_hp: Maximum holding period.
+        rng_seed: Seed for reproducible random number generation.
 
     Returns:
         Dictionary mapping (forecast, half_life) to DataFrames of results.
@@ -132,7 +137,7 @@ def otr_main(
     if forecasts is None:
         forecasts = [10, 5, 0, -5, -10]
     if half_lives is None:
-        half_lives = [1, 5]
+        half_lives = [5, 10, 25, 50, 100]
 
     r_pt = np.linspace(0, 10, 21)
     r_slm = np.linspace(0, 10, 21)
@@ -141,7 +146,7 @@ def otr_main(
     for forecast, hl in product(forecasts, half_lives):
         coeffs = {"forecast": forecast, "hl": hl, "sigma": sigma}
         outputs[(forecast, hl)] = otr_batch(
-            coeffs, n_iter=n_iter, max_hp=max_hp, r_pt=r_pt, r_slm=r_slm
+            coeffs, n_iter=n_iter, max_hp=max_hp, r_pt=r_pt, r_slm=r_slm, rng_seed=rng_seed
         )
 
     return outputs

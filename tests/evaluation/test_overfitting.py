@@ -69,3 +69,33 @@ class TestProbabilityOfBacktestOverfitting:
             metric="sharpe",
         )
         assert result["pbo"] > 0.3
+
+    def test_strong_signal_low_pbo(self):
+        """One dominant strategy among noise → low PBO."""
+        from tradelab.lopezdp_utils.evaluation.overfitting import (
+            probability_of_backtest_overfitting,
+        )
+
+        np.random.seed(42)
+        n_obs = 400
+        data = {
+            "timestamp": pl.datetime_range(
+                pl.datetime(2024, 1, 1),
+                pl.datetime(2025, 2, 4),
+                interval="1d",
+                eager=True,
+            )[:n_obs],
+            "strong": np.random.randn(n_obs) * 0.005 + 0.01,  # very strong drift
+        }
+        # Add 9 pure-noise strategies
+        for i in range(9):
+            data[f"noise_{i}"] = np.random.randn(n_obs) * 0.01
+        trials = pl.DataFrame(data)
+
+        result = probability_of_backtest_overfitting(
+            trials,
+            n_partitions=4,
+            metric="sharpe",
+        )
+        # Strong strategy should consistently rank high OOS
+        assert result["pbo"] < 0.5

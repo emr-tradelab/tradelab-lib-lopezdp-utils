@@ -54,7 +54,8 @@ class TestOTRBatch:
             max_hp=50,
             r_pt=np.linspace(0.5, 2.0, 4),
             r_slm=np.linspace(0.5, 2.0, 4),
-            seed=42,
+            p0=42,
+            rng_seed=42,
         )
         assert isinstance(result, pl.DataFrame)
         assert "r_pt" in result.columns
@@ -72,7 +73,8 @@ class TestOTRBatch:
             max_hp=30,
             r_pt=r_pt,
             r_slm=r_slm,
-            seed=42,
+            p0=42,
+            rng_seed=42,
         )
         assert len(result) == 12
 

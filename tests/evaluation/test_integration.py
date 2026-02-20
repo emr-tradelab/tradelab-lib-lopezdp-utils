@@ -12,9 +12,13 @@ class TestSharpeToDeflatedPipeline:
             deflated_sharpe_ratio,
             probabilistic_sharpe_ratio,
             sharpe_ratio,
+            sharpe_ratio_non_annualized,
         )
 
-        sr = sharpe_ratio(daily_returns, periods_per_year=252)
+        sr_ann = sharpe_ratio(daily_returns, periods_per_year=252)
+        assert sr_ann != 0.0  # sanity
+
+        sr = sharpe_ratio_non_annualized(daily_returns)
         psr = probabilistic_sharpe_ratio(
             observed_sr=sr,
             benchmark_sr=0.0,
@@ -72,7 +76,8 @@ class TestOUToOTRPipeline:
             max_hp=int(hl * 3),
             r_pt=np.linspace(0.5, 2.0, 3),
             r_slm=np.linspace(0.5, 2.0, 3),
-            seed=42,
+            p0=42,
+            rng_seed=42,
         )
         assert len(result) == 9
         assert "sharpe" in result.columns

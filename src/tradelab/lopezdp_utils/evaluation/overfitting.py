@@ -71,7 +71,7 @@ def probability_of_backtest_overfitting(
         omega_c = (test_perf < oos_perf_n_star).sum() / (n - 1)
         omega_c = np.clip(omega_c, 1e-10, 1 - 1e-10)
 
-        logit_c = np.log((1 - omega_c) / omega_c)
+        logit_c = np.log(omega_c / (1 - omega_c))
         logits.append(logit_c)
         ranks.append(omega_c)
 

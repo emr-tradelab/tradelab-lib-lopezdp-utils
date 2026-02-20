@@ -64,6 +64,12 @@ class TestLimitPrice:
         lp_long = limit_price(t_pos=3, pos=0, f=100.0, w=1.0, max_pos=10)
         assert lp_long < 100.0  # buy below forecast
 
+    def test_same_position_returns_forecast(self):
+        from tradelab.lopezdp_utils.evaluation.bet_sizing import limit_price
+
+        result = limit_price(t_pos=5, pos=5, f=100.0, w=1.0, max_pos=10)
+        assert result == 100.0
+
 
 class TestGetW:
     def test_calibration(self):
@@ -171,3 +177,54 @@ class TestAvgActiveSignals:
         result = avg_active_signals(signals)
         assert isinstance(result, pl.DataFrame)
         assert "signal" in result.columns
+
+
+class TestBetSizeMixture:
+    def test_returns_polars_series(self):
+        from tradelab.lopezdp_utils.evaluation.bet_sizing import bet_size_mixture
+
+        counts = pl.Series("c", [5.0, -3.0, 0.0, 2.0, -1.0])
+        result = bet_size_mixture(counts, mu1=1.0, mu2=-1.0, sigma1=2.0, sigma2=2.0, prob1=0.5)
+        assert isinstance(result, pl.Series)
+        assert len(result) == 5
+
+    def test_output_bounded(self):
+        from tradelab.lopezdp_utils.evaluation.bet_sizing import bet_size_mixture
+
+        counts = pl.Series("c", np.linspace(-10, 10, 50))
+        result = bet_size_mixture(counts, mu1=0.0, mu2=0.0, sigma1=3.0, sigma2=3.0, prob1=0.5)
+        assert result.min() >= -1.0
+        assert result.max() <= 1.0
+
+    def test_zero_count_near_zero_size(self):
+        from tradelab.lopezdp_utils.evaluation.bet_sizing import bet_size_mixture
+
+        counts = pl.Series("c", [0.0])
+        result = bet_size_mixture(counts, mu1=0.0, mu2=0.0, sigma1=1.0, sigma2=1.0, prob1=0.5)
+        assert abs(result[0]) < 0.01
+
+
+class TestBetSizeEnsemble:
+    def test_high_prob_positive_size(self):
+        from tradelab.lopezdp_utils.evaluation.bet_sizing import bet_size_ensemble
+
+        result = bet_size_ensemble(avg_prob=0.9, n_classifiers=10)
+        assert result > 0
+
+    def test_low_prob_negative_size(self):
+        from tradelab.lopezdp_utils.evaluation.bet_sizing import bet_size_ensemble
+
+        result = bet_size_ensemble(avg_prob=0.1, n_classifiers=10)
+        assert result < 0
+
+    def test_half_prob_zero_size(self):
+        from tradelab.lopezdp_utils.evaluation.bet_sizing import bet_size_ensemble
+
+        result = bet_size_ensemble(avg_prob=0.5, n_classifiers=10)
+        assert abs(result) < 1e-10
+
+    def test_raises_with_single_classifier(self):
+        from tradelab.lopezdp_utils.evaluation.bet_sizing import bet_size_ensemble
+
+        with pytest.raises(ValueError):
+            bet_size_ensemble(avg_prob=0.7, n_classifiers=1)

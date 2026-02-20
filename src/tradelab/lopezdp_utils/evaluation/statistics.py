@@ -34,6 +34,25 @@ def sharpe_ratio(returns: pl.Series, periods_per_year: float = 252.0) -> float:
     return float((mu / sigma) * np.sqrt(periods_per_year))
 
 
+def sharpe_ratio_non_annualized(returns: pl.Series) -> float:
+    """Compute non-annualized Sharpe ratio (mean / std).
+
+    Use this when feeding SR into probabilistic_sharpe_ratio or
+    deflated_sharpe_ratio, which expect non-annualized values.
+
+    Args:
+        returns: Polars Series of excess returns.
+
+    Returns:
+        Non-annualized Sharpe ratio.
+    """
+    mu = returns.mean()
+    sigma = returns.std()
+    if sigma is None or sigma == 0 or mu is None:
+        return 0.0
+    return float(mu / sigma)
+
+
 def probabilistic_sharpe_ratio(
     observed_sr: float,
     benchmark_sr: float = 0.0,
@@ -44,11 +63,12 @@ def probabilistic_sharpe_ratio(
     """Compute Probabilistic Sharpe Ratio (PSR).
 
     Args:
-        observed_sr: Observed (non-annualized) Sharpe ratio.
+        observed_sr: Observed **non-annualized** Sharpe ratio (mean/std).
+            Use sharpe_ratio_non_annualized() to compute this.
         benchmark_sr: Benchmark SR to test against (often 0).
         n_obs: Number of return observations.
         skew: Skewness of returns (0 for Gaussian).
-        kurtosis: Kurtosis of returns (3 for Gaussian).
+        kurtosis: Raw kurtosis of returns (3 for Gaussian, NOT excess kurtosis).
 
     Returns:
         PSR as a probability in [0, 1].
@@ -74,12 +94,13 @@ def deflated_sharpe_ratio(
     Uses the expected maximum SR across N trials as the benchmark for PSR.
 
     Args:
-        observed_sr: Observed (non-annualized) Sharpe ratio of best strategy.
-        sr_estimates: List of Sharpe ratios from all backtesting trials.
+        observed_sr: Observed **non-annualized** Sharpe ratio of best strategy.
+            Use sharpe_ratio_non_annualized() to compute this.
+        sr_estimates: List of **non-annualized** Sharpe ratios from all trials.
             No default — caller must provide explicit trial accounting.
         n_obs: Number of return observations per trial.
-        skew: Skewness of returns.
-        kurtosis: Kurtosis of returns.
+        skew: Skewness of returns (0 for Gaussian).
+        kurtosis: Raw kurtosis of returns (3 for Gaussian, NOT excess kurtosis).
 
     Returns:
         DSR as a probability in [0, 1].
@@ -113,7 +134,10 @@ def deflated_sharpe_ratio(
 def compute_dd_tuw(
     series: pl.DataFrame, dollars: bool = False
 ) -> tuple[pl.DataFrame, pl.DataFrame]:
-    """Compute drawdown series and time-under-water.
+    """Compute drawdown series and time-under-water per drawdown episode.
+
+    Drawdown: running loss from the high-water mark at each timestamp.
+    Time-under-water: duration from each peak until recovery (next new HWM).
 
     Args:
         series: DataFrame with 'timestamp' and 'pnl' columns.
@@ -121,52 +145,65 @@ def compute_dd_tuw(
 
     Returns:
         Tuple of (dd, tuw) DataFrames.
+        - dd: 'timestamp', 'drawdown' — running drawdown at each point (non-negative).
+        - tuw: 'peak_timestamp', 'recovery_timestamp', 'tuw_days' — one row per
+          drawdown episode (peak to next new HWM).
     """
     timestamps = series["timestamp"].to_list()
-    pnl = series["pnl"].to_numpy()
+    pnl = series["pnl"].to_numpy().astype(float)
 
-    # Compute high-watermark
     hwm = np.maximum.accumulate(pnl)
 
-    # Find HWM episodes: group consecutive rows by their HWM value
-    # For each unique HWM, find the min PnL and the timestamp of the HWM
-    dd_timestamps = []
-    dd_values = []
-
-    # Get unique HWM values in order of first appearance
-    seen = set()
-    hwm_first_idx = []
-    for i, h in enumerate(hwm):
-        if h not in seen:
-            seen.add(h)
-            hwm_first_idx.append(i)
-
-    for idx in hwm_first_idx:
-        h = hwm[idx]
-        # Find all rows with this HWM
-        mask = hwm == h
-        min_pnl = pnl[mask].min()
-        if h > min_pnl:
-            if dollars:
-                dd_val = h - min_pnl
-            else:
-                dd_val = 1 - min_pnl / h
-            dd_timestamps.append(timestamps[idx])
-            dd_values.append(dd_val)
-
-    dd_pl = pl.DataFrame({"timestamp": dd_timestamps, "drawdown": dd_values})
-
-    # Time under water: time between consecutive HWM timestamps
-    if len(dd_timestamps) > 1:
-        tuw_ts = []
-        tuw_vals = []
-        for i in range(len(dd_timestamps) - 1):
-            dt = (dd_timestamps[i + 1] - dd_timestamps[i]) / np.timedelta64(1, "D") / 365.25
-            tuw_ts.append(dd_timestamps[i])
-            tuw_vals.append(float(dt))
-        tuw_pl = pl.DataFrame({"timestamp": tuw_ts, "tuw_years": tuw_vals})
+    # Running drawdown at each timestamp
+    if dollars:
+        dd_vals = hwm - pnl
     else:
-        tuw_pl = pl.DataFrame(schema={"timestamp": pl.Datetime, "tuw_years": pl.Float64})
+        dd_vals = np.where(hwm > 0, 1.0 - pnl / hwm, 0.0)
+
+    dd_pl = pl.DataFrame({"timestamp": timestamps, "drawdown": dd_vals.tolist()})
+
+    # Time-under-water: identify episodes (peak → recovery)
+    tuw_peaks = []
+    tuw_recoveries = []
+    tuw_days = []
+
+    peak_idx = 0
+    i = 1
+    while i < len(hwm):
+        if pnl[i] < hwm[i - 1]:
+            # Drawdown started at peak_idx (last HWM point)
+            peak_idx = i - 1
+            # Find recovery: next point where pnl >= hwm at peak
+            j = i
+            while j < len(pnl) and pnl[j] < hwm[peak_idx]:
+                j += 1
+            recovery_idx = j if j < len(pnl) else len(pnl) - 1
+            ts_peak = timestamps[peak_idx]
+            ts_recovery = timestamps[recovery_idx]
+            dt = (ts_recovery - ts_peak) / np.timedelta64(1, "D")
+            tuw_peaks.append(ts_peak)
+            tuw_recoveries.append(ts_recovery)
+            tuw_days.append(float(dt))
+            i = recovery_idx + 1
+        else:
+            i += 1
+
+    if tuw_peaks:
+        tuw_pl = pl.DataFrame(
+            {
+                "peak_timestamp": tuw_peaks,
+                "recovery_timestamp": tuw_recoveries,
+                "tuw_days": tuw_days,
+            }
+        )
+    else:
+        tuw_pl = pl.DataFrame(
+            schema={
+                "peak_timestamp": pl.Datetime,
+                "recovery_timestamp": pl.Datetime,
+                "tuw_days": pl.Float64,
+            }
+        )
 
     return dd_pl, tuw_pl
 
@@ -197,6 +234,27 @@ def get_hhi(bet_ret: pl.Series) -> float:
     hhi = (wght**2).sum()
     hhi = (hhi - 1.0 / n) / (1.0 - 1.0 / n)
     return float(hhi)
+
+
+def get_hhi_decomposed(bet_ret: pl.Series) -> dict[str, float]:
+    """Compute HHI separately for positive returns, negative returns, and overall.
+
+    López de Prado recommends decomposing concentration to check if PnL
+    depends on a few lucky wins or a few large losses.
+
+    Args:
+        bet_ret: Series of returns from bets.
+
+    Returns:
+        Dictionary with 'hhi_positive', 'hhi_negative', 'hhi_total' keys.
+    """
+    pos = bet_ret.filter(bet_ret > 0)
+    neg = bet_ret.filter(bet_ret < 0)
+    return {
+        "hhi_positive": get_hhi(pos),
+        "hhi_negative": get_hhi(neg),
+        "hhi_total": get_hhi(bet_ret),
+    }
 
 
 # ---------------------------------------------------------------------------
