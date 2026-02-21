@@ -12,9 +12,7 @@ argument-hint: "<module_name> (e.g., evaluation, labeling, features)"
 
 ## Purpose
 
-Systematically compare a module's implementation against the book's theory,
-checking for formula correctness, missing functionality, edge cases, API
-consistency, and test coverage gaps.
+Systematically compare a module's implementation against the book's theory, checking for formula correctness, missing functionality, edge cases, API consistency, and test coverage gaps.
 
 ## Process
 
@@ -36,7 +34,7 @@ Including `conftest.py` fixtures. Note what is tested and what is NOT tested.
 
 ### Step 3: Query NotebookLM for the relevant theory
 
-Use the `notebooklm-research` skill or call `mcp__notebooklm__ask_question` directly.
+Query `notebooklm-researcher` agent for:
 
 **First query — broad overview:**
 > "Give me a comprehensive overview of ALL concepts López de Prado covers
@@ -117,10 +115,39 @@ Format the assessment as:
 | P2 | ... | ... |
 ```
 
+### Step 7: Decide and apply fixes
+
+After producing the assessment, evaluate whether fixes are needed:
+
+**No fixes needed** — If there are zero P0 and zero P1 issues:
+- Save the assessment report to `docs/quality_assessment/<module>.md`
+- Return verdict: `PASS — no fixes required`
+
+**Fixes needed** — If there are P0 or P1 issues:
+- Apply fixes in priority order (P0 first, then P1)
+- For each fix:
+  1. Edit the source file with the correction
+  2. If the fix changes behavior, update or add tests to validate the correction
+  3. Re-query NotebookLM if uncertain about the correct formula or parameter
+- Do NOT apply P2 fixes unless they are trivial (< 5 lines, no behavior change)
+- After all fixes, run the full quality gate:
+  ```bash
+  uvx ruff check --fix . && uvx ruff format .
+  uv run pytest tests/<module>/ -v --tb=short
+  ```
+- If tests fail after fixes, debug and correct — do not leave broken tests
+- Save the assessment report (including applied fixes) to `docs/quality_assessment/<module>.md`
+- Return verdict: `FIXED — <N> issues resolved`
+
+**Fix application criteria (be critical):**
+- Only fix what is clearly wrong or missing according to the book's theory (confirmed via NotebookLM)
+- Do NOT refactor working code for style preferences
+- When in doubt, skip the fix and document it as "needs manual review"
+
 ## Rules
 
 - NEVER rely on training knowledge for López de Prado theory — ALWAYS query NotebookLM
-- General Python/software engineering knowledge is fine to use directly
+- Python/software engineering knowledge is fine to use directly
 - Be specific: cite file paths, line numbers, and exact formulas
 - Distinguish between bugs (wrong output) and gaps (missing features)
 - P0 = incorrect results silently, P1 = crashes or missing critical features, P2 = nice-to-have
