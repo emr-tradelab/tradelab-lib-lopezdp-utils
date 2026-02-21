@@ -8,13 +8,7 @@ This library extracts and productionizes all relevant financial ML utilities fro
 
 The goal is a standalone Python library (`tradelab.lopezdp_utils`) containing every useful algorithm, data structure, and utility from these books, converted into efficient polars/numpy algorithms and organized by functionality.
 
-**Development is split into two phases:**
-1. **Pre-Production (completed):** Extract v1 implementations faithful to the book's code, using the same libraries (pandas, numpy, etc.), with clean Python style and docstrings.
-2. **Production (current):** Optimize for algo trading (pandas → Polars, tests, performance, validation).
-
-See `WORKFLOW.md` for the full methodology. Phase 1 TODO is archived at `docs/phase1_extraction/TODO.md`.
-
-See `docs/plans/phase2_migration` for phase 2 context.
+Both pre-production extraction (Phase 1) and production optimization (Phase 2) are complete. Currently in **Phase 3: Quality Assessment**. Phase 1 history is archived at `docs/phase1_extraction/TODO.md`.
 
 ---
 
@@ -45,6 +39,18 @@ After any big or complex implementation, call `Docs-Updater` subagent to update 
 - `modeling/` — cross-validation, ensemble, hyperparameter tuning (sklearn-native)
 - `evaluation/` — bet sizing, combinatorial backtests, overfitting detection, strategy risk, synthetic backtests (pandas/numpy)
 - `allocation/` — HRP, RMT denoising, NCO, Monte Carlo simulation (numpy/pandas/scipy)
+
+**Chapter-to-package mapping:**
+```
+src/tradelab/lopezdp_utils/
+├── _hpc.py         # Ch. 20 — Multiprocessing
+├── data/           # Ch. 2 + 19 — Bars, Sampling, Futures, ETF, Microstructure
+├── labeling/       # Ch. 3 + 4 — Labeling + Sample Weights
+├── features/       # Ch. 5, 8, 17, 18 + MLAM — Features
+├── modeling/       # Ch. 6, 7, 9 — Ensemble, Cross-Validation, Hyperparameter Tuning
+├── evaluation/     # Ch. 10-15 — Bet Sizing, Backtesting, Statistics, Strategy Risk
+└── allocation/     # Ch. 16 + MLAM — HRP, Denoising, NCO
+```
 
 See `LIBRARY_STANDARDS.md` for verified Polars patterns.
 
