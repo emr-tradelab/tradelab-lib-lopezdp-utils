@@ -10,9 +10,11 @@ Part of the Tradelab algorithmic trading ecosystem.
 
 ## Starting a Work Session
 
-**Phase 1 (Pre-Production) is complete.** All 20 chapters from AFML have been extracted as v1 submodules.
+**Phase 1 (Pre-Production) is complete:** All 20 chapters extracted as v1 submodules (archived at `docs/phase1_extraction/`).
 
-**Current phase: Phase 2 — Production Optimization.** See `WORKFLOW.md` for the Phase 2 scope (Polars migration, tests, error handling, API design).
+**Phase 2 (Production Optimization) is complete:** 285 tests passing, all 7 modules production-grade.
+
+**Current phase: Phase 3 — Quality Assessment.** Module-by-module validation against López de Prado theory.
 
 ---
 
@@ -65,60 +67,44 @@ from tradelab.lopezdp_utils.modeling import (
     log_uniform, MyPipeline, clf_hyper_fit,
 )
 
-# Phase 1 (v1) modules — pandas/numpy, not yet migrated
-from tradelab.lopezdp_utils.bet_sizing import ...
-from tradelab.lopezdp_utils.backtesting_dangers import ...
-from tradelab.lopezdp_utils.backtest_cv import ...
-from tradelab.lopezdp_utils.backtest_synthetic import ...
-from tradelab.lopezdp_utils.backtest_statistics import ...
-from tradelab.lopezdp_utils.strategy_risk import ...
-from tradelab.lopezdp_utils.ml_asset_allocation import ...
+# Phase 2 (production) modules — Evaluation (pandas/numpy/scipy)
+from tradelab.lopezdp_utils.evaluation import (
+    bet_size_from_probability, avg_active_signals, discrete_signal,
+    probability_of_backtest_overfitting,
+    sharpe_ratio, probabilistic_sharpe_ratio, deflated_sharpe_ratio,
+    sharpe_ratio_symmetric, sharpe_ratio_asymmetric,
+    bin_hr, bin_freq, prob_failure, mix_gaussians,
+    generate_synthetic_data, otr_batch, otr_main,
+)
+
+# Phase 2 (production) modules — Allocation (numpy/pandas/scipy)
+from tradelab.lopezdp_utils.allocation import (
+    quasi_diagonalize, get_cluster_var, get_ivp, hrp_weights,
+    denoise_cov, corr_to_cov,
+    get_nco_weights,
+    sim_portfolio_alloc,
+)
 ```
 
 ## Modules
 
-Each submodule corresponds to a chapter/topic from the books:
+All 7 Phase 2 modules are production-grade with 285 passing tests:
 
-### Part 1: Data Analysis
-| Module | Chapter | Topic | Status |
-|--------|---------|-------|--------|
-| `data` | Ch 2, 19 | Bars, Sampling, Futures, ETF Trick, Microstructure | ✅ Phase 2 Complete (Polars) |
-| `labeling` | Ch 3, 4 | Triple-Barrier, Meta-Labeling, Sample Weights, Class Balance | ✅ Phase 2 Complete (Polars) |
-
-### Part 2: Features
-| Module | Chapter | Topic | Status |
-|--------|---------|-------|--------|
-| `features` | Ch 5, 8, 17, 18 + MLAM | Fractional Diff, Entropy, Structural Breaks, Feature Importance, Orthogonal Features | ✅ Phase 2 Complete (Polars I/O) |
-
-### Part 3: Modelling
-| Module | Chapter | Topic | Status |
-|--------|---------|-------|--------|
-| `modeling` | Ch 6, 7, 9 | Ensemble Methods, Purged CV, Hyper-Parameter Tuning | ✅ Phase 2 Complete (sklearn-native) |
-
-### Part 4: Backtesting
-| Module | Chapter | Topic | Status |
-|--------|---------|-------|--------|
-| `bet_sizing` | Ch 10 | Bet Sizing (Signal Generation, Dynamic Position Sizing) | ✅ v1 Complete |
-| `backtesting_dangers` | Ch 11 | Backtesting Pitfalls (CSCV, PBO) | ✅ v1 Complete |
-| `backtest_cv` | Ch 12 | Combinatorial Purged Cross-Validation (CPCV) | ✅ v1 Complete |
-| `backtest_synthetic` | Ch 13 | Backtesting on Synthetic Data (OTR, O-U Process) | ✅ v1 Complete |
-| `backtest_statistics` | Ch 14 | Backtest Statistics (SR, PSR, DSR, HHI, DD) | ✅ v1 Complete |
-| `strategy_risk` | Ch 15 | Understanding Strategy Risk (Binomial Model) | ✅ v1 Complete |
-| `ml_asset_allocation` | Ch 16 | ML Asset Allocation (HRP, Denoising, NCO) | ✅ v1 Complete |
-
-### Part 5: Market Microstructure
-| Module | Chapter | Topic | Status |
-|--------|---------|-------|--------|
-| `data.microstructure` | Ch 19 | Market Microstructure Features | ✅ Phase 2 Complete (merged into `data/`) |
-
-### Part 5: High-Performance Computing
-| Module | Chapter | Topic | Status |
-|--------|---------|-------|--------|
-| `hpc` | Ch 20 | Multiprocessing and Vectorization | ✅ v1 Complete |
+| Module | Chapters | Topic | Status |
+|--------|----------|-------|--------|
+| `data` | 2, 19 | Bars, Sampling, Futures, ETF, Microstructure | ✅ Phase 2 Complete |
+| `labeling` | 3, 4 | Triple-Barrier, Meta-Labeling, Sample Weights, Class Balance | ✅ Phase 2 Complete |
+| `features` | 5, 8, 17, 18 + MLAM | Fractional Diff, Entropy, Structural Breaks, Feature Importance | ✅ Phase 2 Complete |
+| `modeling` | 6, 7, 9 | Ensemble, Purged CV, Hyperparameter Tuning | ✅ Phase 2 Complete |
+| `evaluation` | 10-15 | Bet Sizing, Backtesting, Statistics, Strategy Risk, Synthetic Data | ✅ Phase 2 Complete |
+| `allocation` | 16 + MLAM | HRP, RMT Denoising, NCO, Monte Carlo | ✅ Phase 2 Complete |
+| `_hpc` | 20 | Multiprocessing and Vectorization (internal) | ✅ Phase 2 Complete |
 
 ---
 
 ## Module Details
+
+**See the sections below for API documentation and usage patterns for each module.**
 
 ### `data` — Chapters 2 & 19: Data Layer (Phase 2)
 
@@ -569,6 +555,7 @@ Multiprocessing utilities for parallelizing financial ML computations across CPU
 
 **Key Insight**: Financial ML tasks (labeling, sample weights, feature importance) involve applying the same function to many independent subsets of data. `mp_pandas_obj` automates the partition-dispatch-concatenate pattern. Use `lin_parts` for uniform workloads (row-wise operations) and `nested_parts` for triangular workloads (pairwise computations). Set `num_threads=1` for debugging before scaling up.
 
-> Phase 1 extraction is complete. See `docs/phase1_extraction/TODO.md` for the archived progress log.
-> Phase 2 Sessions 1-5 are complete (`_hpc.py`, `data/`, `labeling/`, `features/`, `modeling/`). See `docs/plans/phase2_migration/` for session plans.
-> `LIBRARY_STANDARDS.md` at the project root documents verified Polars API patterns and pitfalls.
+> Phase 1 extraction is complete (archived at `docs/phase1_extraction/`).
+> Phase 2 production optimization is complete: all 7 modules, 285 tests, on `main`.
+> Phase 3 (Quality Assessment) is current: module-by-module validation against López de Prado theory.
+> See `LIBRARY_STANDARDS.md` for verified Polars API patterns and pitfalls.

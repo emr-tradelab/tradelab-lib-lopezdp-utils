@@ -35,10 +35,34 @@ After any big or complex implementation, call `Docs-Updater` subagent to update 
 
 ## Phase 2 Status
 
-- **Session 1** (`_hpc.py`): complete
-- **Session 2** (`data/`): complete — `data_structures/` and `microstructure/` are **deleted**; use `tradelab.lopezdp_utils.data` instead
-- **Session 3** (`labeling/`): complete — old `labeling/` (barriers, bet_sizing, fixed_horizon, thresholds, trend_scanning) and `sample_weights/` are **deleted**; use `tradelab.lopezdp_utils.labeling` instead; `bet_sizing.py` and `strategy_redundancy.py` deferred to session 6
-- **Session 4** (`features/`): complete — `fractional_diff/`, `entropy_features/`, `structural_breaks/`, `feature_importance/`, and remaining `data_structures/` files are **deleted**; use `tradelab.lopezdp_utils.features` instead; 150 total tests passing
-- **Session 5** (`modeling/`): complete — `cross_validation/`, `ensemble_methods/`, `hyperparameter_tuning/` are **deleted**; use `tradelab.lopezdp_utils.modeling` instead; 176 total tests passing; note: sklearn-native throughout, no Polars migration
-- **Session 6** (`evaluation/`): next — bet sizing + strategy redundancy (deferred from sessions 3+3)
-- See `docs/plans/phase2_migration/` for session plans and `LIBRARY_STANDARDS.md` for verified Polars patterns
+**Phase 2 (Production Optimization) is COMPLETE.** All 7 sessions done, 285 total tests passing.
+
+**Final Module Layout:**
+- `_hpc.py` — HPC engine (internal)
+- `data/` — bars, sampling, futures, etf, microstructure (Polars I/O)
+- `labeling/` — triple-barrier, meta-labeling, sample weights, class balance (Polars I/O)
+- `features/` — fractional diff, entropy, structural breaks, feature importance, orthogonal (Polars I/O)
+- `modeling/` — cross-validation, ensemble, hyperparameter tuning (sklearn-native)
+- `evaluation/` — bet sizing, combinatorial backtests, overfitting detection, strategy risk, synthetic backtests (pandas/numpy)
+- `allocation/` — HRP, RMT denoising, NCO, Monte Carlo simulation (numpy/pandas/scipy)
+
+See `LIBRARY_STANDARDS.md` for verified Polars patterns.
+
+---
+
+## Phase 3: Quality Assessment (Current)
+
+Validate each module's implementation against López de Prado's theory using the quality-assessment skill.
+
+**Process:**
+1. Run quality-assessment skill on one module per session
+2. Apply corrections for theory mismatches, API improvements, or missing edge cases
+3. Mark module as validated in documentation
+
+**Modules to assess (in order):**
+- `data/` (bars, sampling, futures, etf, microstructure)
+- `labeling/` (triple-barrier, meta-labeling, sample weights, class balance)
+- `features/` (fractional diff, entropy, structural breaks, feature importance, orthogonal)
+- `modeling/` (cross-validation, ensemble, hyperparameter tuning)
+- `evaluation/` (bet sizing, combinatorial backtests, overfitting, strategy risk, synthetic)
+- `allocation/` (HRP, RMT denoising, NCO, simulation)
