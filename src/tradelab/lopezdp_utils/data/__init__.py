@@ -26,20 +26,17 @@ from tradelab.lopezdp_utils.data.sampling import (
 )
 
 __all__ = [
-    # Standard bars
-    "time_bars",
-    "tick_bars",
-    "volume_bars",
     "dollar_bars",
-    # Information-driven bars
-    "tick_imbalance_bars",
-    "volume_imbalance_bars",
     "dollar_imbalance_bars",
-    "tick_runs_bars",
-    "volume_runs_bars",
     "dollar_runs_bars",
-    # Sampling
     "get_t_events",
     "sampling_linspace",
     "sampling_uniform",
+    "tick_bars",
+    "tick_imbalance_bars",
+    "tick_runs_bars",
+    "time_bars",
+    "volume_bars",
+    "volume_imbalance_bars",
+    "volume_runs_bars",
 ]

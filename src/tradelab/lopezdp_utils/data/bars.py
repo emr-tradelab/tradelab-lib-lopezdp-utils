@@ -265,21 +265,23 @@ def tick_imbalance_bars(
     current: list[dict] = []
     tick_imbalance = 0.0
     ewma_expected_ticks = float(expected_ticks_init)
-    ewma_tick_imbalance = 0.0
+    ewma_expected_bt = 0.0  # EWMA of per-tick sign E[b_t]
 
     for i, tick in enumerate(ticks):
         current.append(tick)
         b_t = tick_rule[i]
         tick_imbalance += b_t
 
-        threshold = abs(ewma_expected_ticks * ewma_tick_imbalance)
+        # Threshold: E_0[T] * |2P[b_t=1] - 1| = E_0[T] * |E[b_t]|
+        threshold = abs(ewma_expected_ticks * ewma_expected_bt)
         if abs(tick_imbalance) >= max(threshold, 1.0):
             bar = _aggregate_bar(current)
             if bar:
                 bars.append(bar)
-            # Update EWMAs incrementally
-            ewma_expected_ticks = alpha * len(current) + (1 - alpha) * ewma_expected_ticks
-            ewma_tick_imbalance = alpha * tick_imbalance + (1 - alpha) * ewma_tick_imbalance
+            # Update EWMAs: E[T] and E[b_t] (per-tick average)
+            n = len(current)
+            ewma_expected_ticks = alpha * n + (1 - alpha) * ewma_expected_ticks
+            ewma_expected_bt = alpha * (tick_imbalance / n) + (1 - alpha) * ewma_expected_bt
             current = []
             tick_imbalance = 0.0
 
@@ -329,19 +331,21 @@ def volume_imbalance_bars(
     current: list[dict] = []
     vol_imbalance = 0.0
     ewma_expected_ticks = float(expected_ticks_init)
-    ewma_vol_imbalance = 0.0
+    ewma_expected_bv = 0.0  # EWMA of per-tick signed volume E[b_t * v_t]
 
     for i, tick in enumerate(ticks):
         current.append(tick)
         vol_imbalance += tick_rule[i] * tick["volume"]
 
-        threshold = abs(ewma_expected_ticks * ewma_vol_imbalance)
+        # Threshold: E_0[T] * |E[b_t * v_t]|
+        threshold = abs(ewma_expected_ticks * ewma_expected_bv)
         if abs(vol_imbalance) >= max(threshold, 1.0):
             bar = _aggregate_bar(current)
             if bar:
                 bars.append(bar)
-            ewma_expected_ticks = alpha * len(current) + (1 - alpha) * ewma_expected_ticks
-            ewma_vol_imbalance = alpha * vol_imbalance + (1 - alpha) * ewma_vol_imbalance
+            n = len(current)
+            ewma_expected_ticks = alpha * n + (1 - alpha) * ewma_expected_ticks
+            ewma_expected_bv = alpha * (vol_imbalance / n) + (1 - alpha) * ewma_expected_bv
             current = []
             vol_imbalance = 0.0
 
@@ -391,19 +395,21 @@ def dollar_imbalance_bars(
     current: list[dict] = []
     dollar_imbalance = 0.0
     ewma_expected_ticks = float(expected_ticks_init)
-    ewma_dollar_imbalance = 0.0
+    ewma_expected_bd = 0.0  # EWMA of per-tick signed dollar E[b_t * p_t * v_t]
 
     for i, tick in enumerate(ticks):
         current.append(tick)
         dollar_imbalance += tick_rule[i] * tick["price"] * tick["volume"]
 
-        threshold = abs(ewma_expected_ticks * ewma_dollar_imbalance)
+        # Threshold: E_0[T] * |E[b_t * p_t * v_t]|
+        threshold = abs(ewma_expected_ticks * ewma_expected_bd)
         if abs(dollar_imbalance) >= max(threshold, 1.0):
             bar = _aggregate_bar(current)
             if bar:
                 bars.append(bar)
-            ewma_expected_ticks = alpha * len(current) + (1 - alpha) * ewma_expected_ticks
-            ewma_dollar_imbalance = alpha * dollar_imbalance + (1 - alpha) * ewma_dollar_imbalance
+            n = len(current)
+            ewma_expected_ticks = alpha * n + (1 - alpha) * ewma_expected_ticks
+            ewma_expected_bd = alpha * (dollar_imbalance / n) + (1 - alpha) * ewma_expected_bd
             current = []
             dollar_imbalance = 0.0
 
@@ -453,7 +459,7 @@ def tick_runs_bars(
     current: list[dict] = []
     n_buy = 0
     ewma_expected_ticks = float(expected_ticks_init)
-    ewma_buy_prob = 0.5  # Initial buy probability
+    ewma_buy_prob = 0.5  # EWMA of P[b_t=1] from prior bars
 
     for i, tick in enumerate(ticks):
         current.append(tick)
@@ -461,13 +467,14 @@ def tick_runs_bars(
             n_buy += 1
 
         n = len(current)
-        buy_prob = n_buy / n if n > 0 else 0.5
-        expected_runs = ewma_expected_ticks * max(buy_prob, 1 - buy_prob)
+        # Threshold uses EWMA buy prob from prior bars, not current bar
+        expected_runs = ewma_expected_ticks * max(ewma_buy_prob, 1 - ewma_buy_prob)
 
-        if n >= expected_runs:
+        if max(n_buy, n - n_buy) >= max(expected_runs, 1.0):
             bar = _aggregate_bar(current)
             if bar:
                 bars.append(bar)
+            buy_prob = n_buy / n if n > 0 else 0.5
             ewma_expected_ticks = alpha * n + (1 - alpha) * ewma_expected_ticks
             ewma_buy_prob = alpha * buy_prob + (1 - alpha) * ewma_buy_prob
             current = []
@@ -513,41 +520,52 @@ def volume_runs_bars(
     alpha = 2.0 / (ewma_span + 1)
     prices = df["price"].to_numpy()
     tick_rule = _compute_tick_rule(prices)
-    volumes = df["volume"].to_numpy()
 
     ticks = df.to_dicts()
     bars: list[dict] = []
     current: list[dict] = []
     buy_volume = 0.0
-    total_volume = 0.0
+    sell_volume = 0.0
     ewma_expected_ticks = float(expected_ticks_init)
-    ewma_buy_vol = 0.0
-    ewma_vol_per_tick = 1.0
+    ewma_buy_prob = 0.5  # EWMA of P[b_t=1] from prior bars
+    ewma_buy_vol_per_tick = 1.0  # EWMA of E[v_t | b_t=1]
+    ewma_sell_vol_per_tick = 1.0  # EWMA of E[v_t | b_t=-1]
 
     for i, tick in enumerate(ticks):
         current.append(tick)
         vol = tick["volume"]
-        total_volume += vol
         if tick_rule[i] > 0:
             buy_volume += vol
+        else:
+            sell_volume += vol
 
-        n = len(current)
-        buy_vol_frac = buy_volume / total_volume if total_volume > 0 else 0.5
-        sell_vol_frac = 1 - buy_vol_frac
-        expected_runs = ewma_expected_ticks * ewma_vol_per_tick * max(buy_vol_frac, sell_vol_frac)
+        # Threshold: E[T] * max(P[b=1]*E[v|b=1], P[b=-1]*E[v|b=-1])
+        expected_runs = ewma_expected_ticks * max(
+            ewma_buy_prob * ewma_buy_vol_per_tick,
+            (1 - ewma_buy_prob) * ewma_sell_vol_per_tick,
+        )
 
-        if total_volume >= max(expected_runs, 1.0):
+        if max(buy_volume, sell_volume) >= max(expected_runs, 1.0):
             bar = _aggregate_bar(current)
             if bar:
                 bars.append(bar)
+            n = len(current)
+            n_buy = sum(1 for j in range(i - n + 1, i + 1) if tick_rule[j] > 0)
+            n_sell = n - n_buy
+            buy_prob = n_buy / n if n > 0 else 0.5
             ewma_expected_ticks = alpha * n + (1 - alpha) * ewma_expected_ticks
-            ewma_vol_per_tick = (
-                alpha * (total_volume / n if n > 0 else 0) + (1 - alpha) * ewma_vol_per_tick
-            )
-            ewma_buy_vol = alpha * buy_volume + (1 - alpha) * ewma_buy_vol
+            ewma_buy_prob = alpha * buy_prob + (1 - alpha) * ewma_buy_prob
+            if n_buy > 0:
+                ewma_buy_vol_per_tick = (
+                    alpha * (buy_volume / n_buy) + (1 - alpha) * ewma_buy_vol_per_tick
+                )
+            if n_sell > 0:
+                ewma_sell_vol_per_tick = (
+                    alpha * (sell_volume / n_sell) + (1 - alpha) * ewma_sell_vol_per_tick
+                )
             current = []
             buy_volume = 0.0
-            total_volume = 0.0
+            sell_volume = 0.0
 
     return (
         pl.DataFrame(bars)
@@ -594,32 +612,47 @@ def dollar_runs_bars(
     bars: list[dict] = []
     current: list[dict] = []
     buy_dollars = 0.0
-    total_dollars = 0.0
+    sell_dollars = 0.0
     ewma_expected_ticks = float(expected_ticks_init)
-    ewma_dollar_per_tick = 1.0
+    ewma_buy_prob = 0.5  # EWMA of P[b_t=1] from prior bars
+    ewma_buy_dv_per_tick = 1.0  # EWMA of E[dv_t | b_t=1]
+    ewma_sell_dv_per_tick = 1.0  # EWMA of E[dv_t | b_t=-1]
 
     for i, tick in enumerate(ticks):
         current.append(tick)
         dv = tick["price"] * tick["volume"]
-        total_dollars += dv
         if tick_rule[i] > 0:
             buy_dollars += dv
+        else:
+            sell_dollars += dv
 
-        n = len(current)
-        buy_frac = buy_dollars / total_dollars if total_dollars > 0 else 0.5
-        expected_runs = ewma_expected_ticks * ewma_dollar_per_tick * max(buy_frac, 1 - buy_frac)
+        # Threshold: E[T] * max(P[b=1]*E[dv|b=1], P[b=-1]*E[dv|b=-1])
+        expected_runs = ewma_expected_ticks * max(
+            ewma_buy_prob * ewma_buy_dv_per_tick,
+            (1 - ewma_buy_prob) * ewma_sell_dv_per_tick,
+        )
 
-        if total_dollars >= max(expected_runs, 1.0):
+        if max(buy_dollars, sell_dollars) >= max(expected_runs, 1.0):
             bar = _aggregate_bar(current)
             if bar:
                 bars.append(bar)
+            n = len(current)
+            n_buy = sum(1 for j in range(i - n + 1, i + 1) if tick_rule[j] > 0)
+            n_sell = n - n_buy
+            buy_prob = n_buy / n if n > 0 else 0.5
             ewma_expected_ticks = alpha * n + (1 - alpha) * ewma_expected_ticks
-            ewma_dollar_per_tick = (
-                alpha * (total_dollars / n if n > 0 else 0) + (1 - alpha) * ewma_dollar_per_tick
-            )
+            ewma_buy_prob = alpha * buy_prob + (1 - alpha) * ewma_buy_prob
+            if n_buy > 0:
+                ewma_buy_dv_per_tick = (
+                    alpha * (buy_dollars / n_buy) + (1 - alpha) * ewma_buy_dv_per_tick
+                )
+            if n_sell > 0:
+                ewma_sell_dv_per_tick = (
+                    alpha * (sell_dollars / n_sell) + (1 - alpha) * ewma_sell_dv_per_tick
+                )
             current = []
             buy_dollars = 0.0
-            total_dollars = 0.0
+            sell_dollars = 0.0
 
     return (
         pl.DataFrame(bars)
