@@ -28,10 +28,10 @@ echo "---" >> "$LOG_FILE"
 echo "## Run: $(date '+%Y-%m-%d %H:%M:%S')" >> "$LOG_FILE"
 echo "" >> "$LOG_FILE"
 
-# Run Claude headless — the skill handles git commit/merge/push internally
+# Run Claude headless — acceptEdits + explicit tool allowlist avoids interactive prompts
 claude -p "Proceed with qa-audit" \
   --model opus \
-  --permission-mode bypassPermissions \
-  --allowedTools "Read,Write,Edit,Bash,Glob,Grep,Skill,Task" 2>&1 | tee -a "$LOG_FILE"
+  --permission-mode acceptEdits \
+  --allowedTools "Read,Write,Edit,Glob,Grep,Bash(git:*),Bash(uv:*),Bash(uvx:*),Bash(pytest:*),mcp__notebooklm__*" 2>&1 | tee -a "$LOG_FILE"
 
 echo "Completed at: $(date '+%Y-%m-%d %H:%M:%S')" >> "$LOG_FILE"
