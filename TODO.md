@@ -8,5 +8,5 @@ Quality-assess lopezdp_utils modules against López de Prado theory and apply fi
 - [x] labeling (triple-barrier, meta-labeling, sample weights, class balance) — Ch. 3, 4 — PASS
 - [x] features (fractional diff, entropy, structural breaks, feature importance, orthogonal) — Ch. 5, 8, 17, 18 + MLAM — PASS
 - [x] modeling (cross-validation, ensemble, hyperparameter tuning) — Ch. 6, 7, 9 — PASS
-- [ ] evaluation (bet sizing, combinatorial backtests, overfitting, strategy risk, synthetic) — Ch. 10-15
+- [x] evaluation (bet sizing, combinatorial backtests, overfitting, strategy risk, synthetic) — Ch. 10-15
 - [ ] allocation (HRP, RMT denoising, NCO, simulation) — Ch. 16 + MLAM
