@@ -38,7 +38,8 @@ def _opt_port(cov: np.ndarray, mu: np.ndarray | None = None) -> np.ndarray:
         w /= np.dot(ones.T, w)
     else:
         w = np.dot(inv_cov, mu)
-        w /= np.abs(w).sum()  # normalize
+        ones = np.ones((cov.shape[0], 1))
+        w /= np.dot(ones.T, w)  # sum-to-one per Snippet 2.10
     return w
 
 

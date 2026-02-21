@@ -9,4 +9,4 @@ Quality-assess lopezdp_utils modules against López de Prado theory and apply fi
 - [x] features (fractional diff, entropy, structural breaks, feature importance, orthogonal) — Ch. 5, 8, 17, 18 + MLAM — PASS
 - [x] modeling (cross-validation, ensemble, hyperparameter tuning) — Ch. 6, 7, 9 — PASS
 - [x] evaluation (bet sizing, combinatorial backtests, overfitting, strategy risk, synthetic) — Ch. 10-15
-- [ ] allocation (HRP, RMT denoising, NCO, simulation) — Ch. 16 + MLAM
+- [x] allocation (HRP, RMT denoising, NCO, simulation) — Ch. 16 + MLAM — FIXED 1 P1 issue
